@@ -35,7 +35,7 @@ def get_metadata(metadata_dir):
     return celeb_metadata, image_metadata
  
 
-def get_image(image_path):
+def get_image(metadata_dir):
     """
     Gets the image from  image path and returns the image.
         Given an image data directory, this function opens and decodes the image stored in the directory.
