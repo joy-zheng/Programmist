@@ -5,9 +5,9 @@ from scipy.io import loadmat
 
 metadata_dir = 'data/celebrity2000_meta.mat'
 image_dir  = 'data/CACD2000' 
-img_size  = 128
-# database = ['wiki', 'celebrityData'] #in case we want to use both wiki and imagedata
- 
+img_size  = 128 
+age_groups = [range(11, 21), range(21, 31), range(31, 41),range(41, 51), range(51, 151)]
+
 def get_metadata(metadata_dir):
     """
     Gets the metadata from metadata directory and returns the metadata for both celebrities and images.
@@ -31,11 +31,12 @@ def get_metadata(metadata_dir):
     image_year = x[datatype[1]][0][0][2]
     image_features = x[datatype[1]][0][0][3]
     image_filename = x[datatype[1]][0][0][4]
-    image_metadata = [image_age, image_id, image_year, image_features, image_filename] #array of image features
-    return celeb_metadata, image_metadata
- 
 
-def get_image(metadata_dir):
+    age_group_labels = [0 if (i in age_groups[0]) else 1 if (i in age_groups[1]) else 2 if (i in age_groups[2]) else 3 if (i in age_groups[3]) else 4 if (i in age_groups[4]) else None for i in image_age] 
+    image_metadata = [image_age, age_group_labels, image_id, image_year, image_features, image_filename] #array of image features
+    return celeb_metadata, image_metadata
+
+def get_image(image_path):
     """
     Gets the image from  image path and returns the image.
         Given an image data directory, this function opens and decodes the image stored in the directory.
@@ -57,4 +58,5 @@ def get_image(metadata_dir):
         imgs[i] = img 
     return imgs, paths
  
- #TODO: might write a next_batch function to make bathcing easier
+ #TODO: might write a next_batch function to make batching easier
+get_metadata(metadata_dir)
