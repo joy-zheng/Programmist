@@ -28,18 +28,19 @@ class Discriminator_Model(nn.Module):
 
         self.main = nn.Sequential(
             # input is (nc) x 64 x 64
-            nn.Conv2d(64, 4, 4, bias=False),
+            nn.Conv2d(out_channels = 64, kernel_size = 4, stride = 2),
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf) x 32 x 32
-            nn.Conv2d(128, 128, 4, 4, bias=False),
+
+            nn.Conv2d(out_channels = 128, kernel_size = 4, stride = 2),
             nn.BatchNorm2d(128),
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*2) x 16 x 16
-            nn.Conv2d(256, 4, 4, bias=False),
+            nn.Conv2d(out_channels = 256, kernel_size = 4, stride = 2),
             nn.BatchNorm2d(256),
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*4) x 8 x 8
-            nn.Conv2d(512, 4, 4, bias=False),
+            nn.Conv2d(out_channels = 512, kernel_size = 4, stride = 2),
             nn.BatchNorm2d(512),
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*8) x 4 x 4
