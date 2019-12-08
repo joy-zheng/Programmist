@@ -36,7 +36,7 @@ def get_metadata(metadata_dir):
     image_metadata = [image_age, age_group_labels, image_id, image_year, image_features, image_filename] #array of image features
     return celeb_metadata, image_metadata
 
-def get_image(image_path):
+def get_image(image_dir):
     """
     Gets the image from  image path and returns the image.
         Given an image data directory, this function opens and decodes the image stored in the directory.
@@ -45,18 +45,24 @@ def get_image(image_path):
 
         :return: arrays  of rgb images and paths
     """ 
-    paths = os.listdir(image_dir)
+    paths = os.listdir(image_dir)[0:1000]
     imgs = np.ndarray([len(paths), img_size, img_size, 3])
     for i in range(len(paths)):
         img = cv2.imread(os.path.join(image_dir, paths[i]))
         #uncomment below if  you want to display imgs
-        # cv2.imshow('image', img)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows() 
+        # if i == 0:
+        #     cv2.imshow('image', img)
+        #     cv2.waitKey(0)
+        #     cv2.destroyAllWindows() 
         img = cv2.resize(img, (img_size, img_size))
         img = img.astype(np.float32) 
         imgs[i] = img 
-    return imgs, paths
- 
+    celeb_metadata, image_metadata = get_metadata(metadata_dir)
+    age_groups = image_metadata[1][0:len(paths)] 
+    onehot = np.zeros((len(paths), img_size,img_size, 5))
+    onehot[np.arange(len(paths)),:,:, age_groups] = np.ones((img_size,img_size)) 
+    stacked = np.concatenate((imgs, onehot), axis = 3) 
+    return stacked, paths
+
+get_image(image_dir)
  #TODO: might write a next_batch function to make batching easier
-get_metadata(metadata_dir)

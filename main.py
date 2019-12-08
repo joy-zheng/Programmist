@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras import Model
 from preprocess import get_metadata, get_image
 from generator import Generator_Model
-from discriminator import Distcriminator_Model
+from discriminator import Discriminator_Model
 import tensorflow_gan as tfgan
 import tensorflow_hub as hub
 import numpy as np
@@ -10,10 +10,8 @@ import numpy as np
 batch_size = 30
 z_dim = 500
 
-
-
 # Train the model for one epoch.
-def train(generator, discriminator, dataset_iterator, manager):
+def train(generator, discriminator, real_images):
     """
     Train the model for one epoch. Save a checkpoint every 500 or so batches.
 
@@ -25,14 +23,18 @@ def train(generator, discriminator, dataset_iterator, manager):
     :return: The average FID score over the epoch
     """
     # Loop over our data until we run out
-    for iteration, batch in enumerate(dataset_iterator):
+    #batch = getnextbatch(imgs, batch_id)
+    batch = real_images[0:100]
+    target_agegroup = None
+    for i in range (0, len(real_images), batch_size):
+    # for iteration, batch in enumerate(dataset_iterator):
         # TODO: Train the model
-        noise = tf.random.uniform([batch_size, z_dim], -1, 1)
+        batch = real_images[i:i+batch_size]
         with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
-            g_output = generator(noise)
+            g_output = generator(batch)
             d_fake = discriminator(g_output)
             d_real = discriminator(batch)
-            g_loss = generator.loss_function(d_fake)
+            g_loss = generator.loss_function(d_fake, batch, target_agegroup)
             d_loss = discriminator.loss_function(d_fake, d_real)
         g_gradients = g_tape.gradient(g_loss,  generator.trainable_variables)
         generator.optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))        
@@ -69,11 +71,18 @@ def test(generator):
 
 def main():
     # Load a batch of images (to feed to the discriminator)
-
+    metadata_dir = 'data/celebrity2000_meta.mat'
+    image_dir  = 'data/CACD2000' 
+    celeb_metadata, image_metadata = get_metadata(metadata_dir)
+    real_images, paths = get_image(image_dir)
+    group_labels = image_metadata[1]
+    print(group_labels)
+    print("------------Preprocessing done.------------")
     # Initialize generator and discriminator models
     generator = Generator_Model()
     discriminator = Discriminator_Model()
 
+    self.train(generator, discriminator, real_images)
     try:
         # Specify an invalid GPU device
         with tf.device('/device:' + args.device):
