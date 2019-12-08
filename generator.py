@@ -5,6 +5,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 import preprocess
 import dgl
+import torchvision.models as models
+import numpy as np
+import cv2
+import skimage
+from PIL import Image
+from torchvision import transforms
+ 
 
 class Generator_Model(nn.Module):
     def __init__(self):
@@ -37,7 +44,7 @@ class Generator_Model(nn.Module):
         # TODO: Calculate the loss
         pass
 
-    def identity_preserving_module(original_features, generated_features):
+    def identity_preserving_module(org_image, generated_image):
         """
         Outputs the identity loss for the given image and its generated image.
 
@@ -45,11 +52,29 @@ class Generator_Model(nn.Module):
 
         :return: the sum of mean squared identity loss
         """
+        original_features = self.alex_features(org_image)
+        generated_features = self.alex_features(generated_image)
         identity_loss =  0
         for i in len(original_features):
             sq_diff = np.square(abs(original_features[i] - generated_features[i]))
             identity_loss +=  sq_diff        
         return identity_loss
-    
+
     def age_classification_module():
         pass
+
+
+    def alex_features (input_image):
+        # input_image = Image.open('bunny.jpg')
+        alexnet_model = models.alexnet(pretrained=True)
+        preprocess = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+        input_tensor = preprocess(input_image)
+        input_batch = input_tensor.unsqueeze(0)
+        with torch.no_grad():
+            output = alexnet_model(input_batch)
+        return output
