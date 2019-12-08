@@ -12,45 +12,42 @@ class Discriminator_Model(nn.Module):
         """
         The model for the discriminator network is defined here.
         """
-        self.label_embedding = nn.Embedding(opt.n_classes, opt.n_classes)
-        #
-        # self.model = nn.Sequential(
-        #     nn.Linear(opt.n_classes + int(np.prod(img_shape)), 512),
+
+        self.leakyrelu = nn.LeakyReLU(0.2)
+        self.conv1 = Conv2d(3, 64, kernel_size=4, stride=2)
+        self.conv2 = Conv2d(64, 128, kernel_size=4, stride=2)
+        self.batchnorm2 = nn.BatchNorm2d(128, eps=0.001, track_running_stats=True)
+        self.conv3 = Conv2d(128, 256, kernel_size=4, stride=2)
+        self.batchnorm3 = nn.BatchNorm2d(256, eps=0.001, track_running_stats=True)
+        self.conv4 = Conv2d(256, 512, kernel_size=4, stride=2)
+        self.batchnorm4 = nn.BatchNorm2d(512, eps=0.001, track_running_stats=True)
+        self.conv5 = Conv2d(512, 512, kernel_size=4, stride=2)
+
+        # self.main = nn.Sequential(
+        #     # input is (nc) x 64 x 64
+        #     nn.Conv2d(3, 64, kernel_size = 4, stride = 2),
         #     nn.LeakyReLU(0.2, inplace=True),
-        #     nn.Linear(512, 512),
-        #     nn.Dropout(0.4),
+        #     # state size. (ndf) x 32 x 32
+        #     # torch.cat(condition,1)
+        #     nn.Conv2d(64, 128, kernel_size = 4, stride = 2),
+        #     nn.BatchNorm2d(128),
         #     nn.LeakyReLU(0.2, inplace=True),
-        #     nn.Linear(512, 512),
-        #     nn.Dropout(0.4),
+        #     # state size. (ndf*2) x 16 x 16
+        #     nn.Conv2d(128, 256, kernel_size = 4, stride = 2),
+        #     nn.BatchNorm2d(256),
         #     nn.LeakyReLU(0.2, inplace=True),
-        #     nn.Linear(512, 1),
+        #     # state size. (ndf*4) x 8 x 8
+        #     nn.Conv2d(256, 512, kernel_size = 4, stride = 2),
+        #     nn.BatchNorm2d(512),
+        #     nn.LeakyReLU(0.2, inplace=True),
+        #     # state size. (ndf*8) x 4 x 4
+        #     nn.Conv2d(512, 512, kernel_size = 4, stride = 2),
+        #     # nn.Sigmoid()
         # )
-
-        self.main = nn.Sequential(
-            # input is (nc) x 64 x 64
-            nn.Conv2d(3, 64, kernel_size = 4, stride = 2),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf) x 32 x 32
-            # torch.cat(condition,1)
-            nn.Conv2d(64, 128, kernel_size = 4, stride = 2),
-            nn.BatchNorm2d(128),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*2) x 16 x 16
-            nn.Conv2d(128, 256, kernel_size = 4, stride = 2),
-            nn.BatchNorm2d(256),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*4) x 8 x 8
-            nn.Conv2d(256, 512, kernel_size = 4, stride = 2),
-            nn.BatchNorm2d(512),
-            nn.LeakyReLU(0.2, inplace=True),
-            # state size. (ndf*8) x 4 x 4
-            nn.Conv2d(512, 512, kernel_size = 4, stride = 2),
-            # nn.Sigmoid()
-        )
-        # pass
+        # # pass
 
 
-    def call(self, inputs):
+    def call(self, inputs, condition):
         """
         Executes the discriminator model on a batch of input images and outputs whether it is real or fake.
 
@@ -58,8 +55,14 @@ class Discriminator_Model(nn.Module):
 
         :return: a batch of values indicating whether the image is real or fake, shape=[batch_size, 1]
         """
-        value = self.model(inputs)
-        return value
+        x = self.lrelu(self.conv1(inputs))
+        x = torch.cat((x,condition),1)
+        x = self.leakyrelu(self.batchnorm2(self.conv2(x)))
+        x = self.leakyrelu(self.batchnorm3(self.conv3(x)))
+        x = self.leakyrelu(self.batchnorm4(self.conv4(x)))
+        x = self.conv5(x)
+        return x
+        # return value
 
     def loss_function(self, disc_real_output, disc_fake1_output, disc_fake2_output):
         """
