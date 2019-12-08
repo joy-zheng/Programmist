@@ -37,7 +37,19 @@ class Generator_Model(nn.Module):
         # TODO: Calculate the loss
         pass
 
-    def identity_preserving_module():
-        pass
+    def identity_preserving_module(original_features, generated_features):
+        """
+        Outputs the identity loss for the given image and its generated image.
+
+        :param disc_fake_output: original_features and generated_features from the 8th layer of AlexNet.
+
+        :return: the sum of mean squared identity loss
+        """
+        identity_loss =  0
+        for i in len(original_features):
+            sq_diff = np.square(abs(original_features[i] - generated_features[i]))
+            identity_loss +=  sq_diff        
+        return identity_loss
+    
     def age_classification_module():
         pass
