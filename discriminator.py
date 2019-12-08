@@ -61,7 +61,7 @@ class Discriminator_Model(nn.Module):
         value = self.model(inputs)
         return value
 
-    def loss_function(self, disc_real_output, disc_fake_output):
+    def loss_function(self, disc_real_output, disc_fake1_output, disc_fake2_output):
         """
         Outputs the discriminator loss given the discriminator model output on the real and generated images.
 
@@ -71,18 +71,13 @@ class Discriminator_Model(nn.Module):
         :return: loss, the combined cross entropy loss, scalar
         """
       # TODO: Calculate the loss
-        # # real image, right label
-        # D1_logits = discriminator(imgs, name='discriminator', condition=true_label_fea_64)
-        # # real image, false label
-        # D2_logits = discriminator(imgs, name='discriminator', condition=false_label_fea_64, reuse=True)
-        # # fake image, true label
-        # D3_logits = discriminator(self.g_source, name='discriminator', condition=true_label_fea_64, reuse=True)
 
-        # d_loss_real = tf.reduce_mean(tf.square(D1_logits - 1.))
-        # d_loss_fake1 = tf.reduce_mean(tf.square(D2_logits))
-        # d_loss_fake2 = tf.reduce_mean(tf.square(D3_logits))
+        d_loss_real = np.mean(np.square(disc_real_output - 1.))
+        d_loss_fake1 = np.mean(np.square(disc_fake1_output))
+        d_loss_fake2 = np.mean(np.square(disc_fake2_output))
+
+        loss = (1. / 2 * (d_loss_real + 1. / 2 * (d_loss_fake1 + d_loss_fake2)))
 
         # self.d_loss = (1. / 2 * (d_loss_real + 1. / 2 * (d_loss_fake1 + d_loss_fake2))) * self.gan_loss_weight
-
-        loss = 1/2 * nn.CrossEntropyLoss(np.square(disc_real_output - 1)) + 1/2 * nn.CrossEntropyLoss(np.square(disc_fake_output))
+        # loss = 1/2 * nn.CrossEntropyLoss(np.square(disc_real_output - 1)) + 1/2 * nn.CrossEntropyLoss(np.square(disc_fake_output))
         return loss
