@@ -32,10 +32,17 @@ def train(generator, discriminator, real_images):
         batch = real_images[i:i+batch_size]
         with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
             g_output = generator(batch)
-            d_fake = discriminator(g_output)
-            d_real = discriminator(batch)
-            g_loss = generator.loss_function(d_fake, batch, target_agegroup)
-            d_loss = discriminator.loss_function(d_fake, d_real)
+            #fake img, real label
+            d_fake1_logit = discriminator(g_output, condition = true_label_64)
+            #real img, fake label
+            d_fake2_logit = discriminator(batch, condition = fake_label_64)
+            #real img, real label
+            d_real_logit = discriminator(batch, condition = true_label_64)
+
+
+            g_loss = generator.loss_function(d_real_logit, batch, target_agegroup)
+            d_loss = discriminator.loss_function(d_real_logit, d_fake1_logit, d_fake2_logit)
+            
         g_gradients = g_tape.gradient(g_loss,  generator.trainable_variables)
         generator.optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))        
         d_gradients = d_tape.gradient(d_loss,  discriminator.trainable_variables)
