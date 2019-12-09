@@ -11,7 +11,7 @@ batch_size = 30
 z_dim = 500
 
 # Train the model for one epoch.
-def train(generator, discriminator, real_images):
+def train(generator, discriminator, real_images, real_labels_onehot, fake_labels_onehot):
     """
     Train the model for one epoch. Save a checkpoint every 500 or so batches.
 
@@ -24,20 +24,23 @@ def train(generator, discriminator, real_images):
     """
     # Loop over our data until we run out
     #batch = getnextbatch(imgs, batch_id)
-    batch = real_images[0:100]
+
+    
     target_agegroup = None
     for i in range (0, len(real_images), batch_size):
     # for iteration, batch in enumerate(dataset_iterator):
         # TODO: Train the model
         batch = real_images[i:i+batch_size]
+        batch_real_labels = real_labels_onehot[i:i+batch_size]
+        batch_fake_labels = fake_labels_onehot[i:i+batch_size]
         with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
-            g_output = generator(batch)
+            g_output = generator(batch, batch_real_labels)
             #fake img, real label
-            d_fake1_logit = discriminator(g_output, condition = true_label_64)
+            d_fake1_logit = discriminator(g_output,  batch_real_labels)
             #real img, fake label
-            d_fake2_logit = discriminator(batch, condition = fake_label_64)
+            d_fake2_logit = discriminator(batch, batch_fake_labels)
             #real img, real label
-            d_real_logit = discriminator(batch, condition = true_label_64)
+            d_real_logit = discriminator(batch, batch_real_labels)
 
 
 
@@ -90,7 +93,7 @@ def main():
     generator = Generator_Model()
     discriminator = Discriminator_Model()
 
-    self.train(generator, discriminator, real_images)
+    train(generator, discriminator, real_images, real_labels_onehot, fake_labels_onehot)
     try:
         # Specify an invalid GPU device
         with tf.device('/device:' + args.device):

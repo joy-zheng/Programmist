@@ -40,14 +40,16 @@ class Generator_Model(nn.Module):
         self.conv4 = nn.Conv2d(32, 3, kernel_size=7)
         self.optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate)
 
-    def call(self, inputs):
+    def forward(self, inputs, labels):
         """
         Executes the generator model on the random noise vectors.
         :param inputs: images and conditional feature maps concatenated together.
         :return: prescaled generated images, shape=[batch_size, height, width, channel]
         """
         # TODO: Call the forward pass
-        x = self.conv1(inputs)
+        x = torch.cat((inputs,labels),3)
+        # x = np.concatenate((inputs, labels), 3)
+        x = self.conv1(x)
         x = self.bn(x)
         x = self.relu(x)
         x = self.conv2(x)
