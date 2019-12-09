@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras import Model
-from preprocess import get_metadata, get_image
+from preprocess import Data_Processor
 from generator import Generator_Model
 from discriminator import Discriminator_Model
 import tensorflow_gan as tfgan
@@ -82,10 +82,9 @@ def test(generator):
 
 def main():
     # Load a batch of images (to feed to the discriminator)
-    metadata_dir = 'data/celebrity2000_meta.mat'
-    image_dir  = 'data/CACD2000' 
-    celeb_metadata, image_metadata = get_metadata(metadata_dir)
-    real_images, real_labels_onehot, fake_labels_onehot, train_label_pairs, paths = get_image(image_dir)
+    Data_Processor = Data_Processor()
+    celeb_metadata, image_metadata = Data_Processor.get_metadata()
+    real_images, real_labels_onehot, fake_labels_onehot, train_label_pairs, paths = Data_Processor.get_image()
     group_labels = image_metadata[1]
     print(group_labels)
     print("------------Preprocessing done.------------")
