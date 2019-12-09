@@ -30,14 +30,14 @@ class Generator_Model(nn.Module):
         self.identity_weight = 0.3
     
         # Initialize layers
-        self.conv1 = nn.Conv2D(1, 32, kernel_size=7)
-        self.conv2 = nn.Conv2D(32, 64, kernel_size=3)
-        self.conv3 = nn.Conv2D(64, 128, kernel_size=3)
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=7)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3)
         self.relu = nn.ReLU()
         self.bn = nn.BatchNorm2d(20)
         self.deconv1 = nn.ConvTranspose2d(3, 64, kernel_size=3)
         self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=3)
-        self.conv4 = nn.Conv2D(3, kernel_size=7)
+        self.conv4 = nn.Conv2d(32, 3, kernel_size=7)
         self.optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate)
 
     def call(self, inputs):
@@ -96,8 +96,8 @@ class Generator_Model(nn.Module):
         :return a float loss for the batch
 
         """
-        fake_age = classify_age_alexnet(fake_img)
-        age_loss = softmax_cross_entropy_loss(fake_age, target_age_group)
+        fake_age = self.classify_age_alexnet(fake_img)
+        age_loss = self.softmax_cross_entropy_loss(fake_age, target_age_group)
         #    age_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
         #                logits=fake_age, labels=target_age_group))
         return age_loss
@@ -146,12 +146,12 @@ class Generator_Model(nn.Module):
         :return a float loss for the batch
         """
         # checkout https://discuss.pytorch.org/t/pytorch-equivalence-to-sparse-softmax-cross-entropy-with-logits-in-tensorflow/18727/2
-        loss = nn.CrossEtnropyLoss()
+        loss = nn.CrossEntropyLoss()
         output = loss(logits, labels)
-        return torch.mean(output)
+        return np.mean(output)
 
 
-    def identity_preserving_module(org_image, generated_image):
+    def identity_preserving_module(self, org_image, generated_image):
         """
         Outputs the identity loss for the given image and its generated image.
 
@@ -167,11 +167,7 @@ class Generator_Model(nn.Module):
             identity_loss +=  sq_diff        
         return identity_loss
 
-    def age_classification_module():
-        pass
-
-
-    def alex_features (input_image):
+    def alex_features (self, input_image):
         # input_image = Image.open('bunny.jpg')
         alexnet_model = models.alexnet(pretrained=True)
         preprocess = transforms.Compose([
