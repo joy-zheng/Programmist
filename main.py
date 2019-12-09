@@ -82,7 +82,7 @@ def main():
     metadata_dir = 'data/celebrity2000_meta.mat'
     image_dir  = 'data/CACD2000' 
     celeb_metadata, image_metadata = get_metadata(metadata_dir)
-    real_images, paths = get_image(image_dir)
+    real_images, real_labels_onehot, fake_labels_onehot, train_label_pairs, paths = get_image(image_dir)
     group_labels = image_metadata[1]
     print(group_labels)
     print("------------Preprocessing done.------------")

@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import os  
 from scipy.io import loadmat
+from random import randint
 
 metadata_dir = 'data/celebrity2000_meta.mat'
 image_dir  = 'data/CACD2000' 
@@ -18,7 +19,7 @@ def get_metadata(metadata_dir):
     """ 
     x = loadmat(metadata_dir) 
     datatype = ['celebrityData', 'celebrityImageData']
-
+    # print(x)
     names = x[datatype[0]][0][0][0]
     identity = x[datatype[0]][0][0][1]
     birth = x[datatype[0]][0][0][2]
@@ -34,6 +35,7 @@ def get_metadata(metadata_dir):
 
     age_group_labels = [0 if (i in age_groups[0]) else 1 if (i in age_groups[1]) else 2 if (i in age_groups[2]) else 3 if (i in age_groups[3]) else 4 if (i in age_groups[4]) else None for i in image_age] 
     image_metadata = [image_age, age_group_labels, image_id, image_year, image_features, image_filename] #array of image features
+
     return celeb_metadata, image_metadata
 
 def get_image(image_dir):
@@ -59,10 +61,25 @@ def get_image(image_dir):
         imgs[i] = img 
     celeb_metadata, image_metadata = get_metadata(metadata_dir)
     age_groups = image_metadata[1][0:len(paths)] 
-    onehot = np.zeros((len(paths), img_size,img_size, 5))
-    onehot[np.arange(len(paths)),:,:, age_groups] = np.ones((img_size,img_size)) 
-    stacked = np.concatenate((imgs, onehot), axis = 3) 
-    return stacked, paths
+    train_label_pairs = get_fakelabels(age_groups)
+    fake_labels =  train_label_pairs[:,1]
+    real_labels_onehot = np.zeros((len(paths), img_size,img_size, 5))
+    real_labels_onehot[np.arange(len(paths)),:,:, age_groups] = np.ones((img_size,img_size)) 
 
-get_image(image_dir)
+    fake_labels_onehot = np.zeros((len(paths), img_size,img_size, 5))
+    fake_labels_onehot[np.arange(len(paths)),:,:, fake_labels] = np.ones((img_size,img_size)) 
+    return imgs, real_labels_onehot, fake_labels_onehot, train_label_pairs, paths
+
+def get_fakelabels(true_labels):
+    label_pairs = np.zeros((len(true_labels),2), dtype=int)
+    label_pairs[:,0] = true_labels
+    n = max(true_labels)
+    for i in range(len(true_labels)):
+        rand = randint(1,n)
+        true_label = true_labels[i]
+        fake_label = (true_label+rand)%n
+        label_pairs[i,1] = fake_label 
+    return label_pairs
+
+# get_image(image_dir)
  #TODO: might write a next_batch function to make batching easier
