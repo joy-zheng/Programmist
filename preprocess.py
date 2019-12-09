@@ -4,7 +4,7 @@ import os
 from scipy.io import loadmat
 from random import randint
 
-class data_processor:
+class Data_Processor:
     def __init__(self, batch_size = 30, img_size= 128, shuffle=True, mode='train'):
         self.metadata_dir = 'data/celebrity2000_meta.mat'
         self.image_dir  = 'data/CACD2000' 
@@ -23,7 +23,7 @@ class data_processor:
         """ 
         x = loadmat(self.metadata_dir) 
         datatype = ['celebrityData', 'celebrityImageData']
-        # print(x)
+
         names = x[datatype[0]][0][0][0]
         identity = x[datatype[0]][0][0][1]
         birth = x[datatype[0]][0][0][2]
