@@ -52,8 +52,8 @@ class Generator_Model(nn.Module):
         :return a float loss for the batch
 
         """
-        fake_age = classify_age_alexnet(fake_img)
-        age_loss = softmax_cross_entropy_loss(fake_age, target_age_group)
+        fake_age = self.classify_age_alexnet(fake_img)
+        age_loss = self.softmax_cross_entropy_loss(fake_age, target_age_group)
         #    age_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
         #                logits=fake_age, labels=target_age_group))
         return age_loss
@@ -104,7 +104,7 @@ class Generator_Model(nn.Module):
         # checkout https://discuss.pytorch.org/t/pytorch-equivalence-to-sparse-softmax-cross-entropy-with-logits-in-tensorflow/18727/2
         loss = nn.CrossEntropyLoss()
         output = loss(logits, labels)
-        return torch.mean(output)
+        return np.mean(output)
 
 
     def identity_preserving_module(self, org_image, generated_image):
@@ -168,8 +168,8 @@ class Generator_Model(nn.Module):
 
         x = self.conv4(x)
     
-
-        return nn.Tanh(x)
+        m = nn.Tanh()
+        return m(x)
 
     def loss_function(self, disc_fake_output, real_img, target_age_group):
         """
