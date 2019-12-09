@@ -30,17 +30,61 @@ class Generator_Model(nn.Module):
         self.identity_weight = 0.3
     
         # Initialize layers
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=7)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3)
-        self.conv3 = nn.Conv2d(64, 128, kernel_size=3)
+        self.conv1 = nn.Conv2D(1, 32, kernel_size=7)
+        self.conv2 = nn.Conv2D(32, 64, kernel_size=3)
+        self.conv3 = nn.Conv2D(64, 128, kernel_size=3)
         self.relu = nn.ReLU()
         self.bn = nn.BatchNorm2d(20)
         self.deconv1 = nn.ConvTranspose2d(3, 64, kernel_size=3)
         self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=3)
-        self.conv4 = nn.Conv2d(32, 3, kernel_size=7)
+        self.conv4 = nn.Conv2D(3, kernel_size=7)
         self.optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate)
 
+    def call(self, inputs):
+        """
+        Executes the generator model on the random noise vectors.
 
+        :param inputs: images and conditional feature maps concatenated together.
+
+        :return: prescaled generated images, shape=[batch_size, height, width, channel]
+        """
+        # TODO: Call the forward pass
+        x = self.conv1(inputs)
+        x = self.bn(x)
+        x = self.relu(x)
+        x = self.conv2(x)
+        x = self.bn(x)
+        x = self.relu(x)
+        x = self.bn(x)
+        x = self.conv3(x)
+        x = self.relu(x)
+
+        x = self.deconv1(x)
+        x = self.relu(x)
+        x = self.deconv2(x)
+        x = self.relu(x)
+
+        x = self.conv4(x)
+
+
+        return nn.Tanh(x)
+
+    def loss_function(self, disc_fake_output, real_img, target_age_group):
+        """
+        Outputs the loss given the discriminator output on the generated images.
+
+        :param disc_fake_output: the discrimator output on the generated images, 
+
+        :return: loss, the cross entropy loss, scalar
+        """
+        # TODO: Calculate the loss
+        fake_img = call(real_img, target_age_group)
+        generator_loss = (1 / 2 * np.mean(np.square(disc_fake_output - 1)))
+        age_loss = calculate_age_loss(fake_img, target_age_group)
+        identity_loss = identity_preserving_module(real_img, fake_img)
+        weighted_loss = self.generator_weight * generator_loss + self.age_weight * age_loss + self.identity_weight * identity_loss
+        return weighted_loss
+    
     def calculate_age_loss(self, fake_img, target_age_group):
         """
         Calculate age loss for generator
@@ -52,8 +96,8 @@ class Generator_Model(nn.Module):
         :return a float loss for the batch
 
         """
-        fake_age = self.classify_age_alexnet(fake_img)
-        age_loss = self.softmax_cross_entropy_loss(fake_age, target_age_group)
+        fake_age = classify_age_alexnet(fake_img)
+        age_loss = softmax_cross_entropy_loss(fake_age, target_age_group)
         #    age_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
         #                logits=fake_age, labels=target_age_group))
         return age_loss
@@ -86,7 +130,7 @@ class Generator_Model(nn.Module):
         processed_img = []
         for img in fake_img:
             sample = preprocess(img)
-        processed_img = torch.tensor(processed_img)
+        processed_img = torch.Tensor(processed_img)
         output = alexnet(processed_img)
         _, pred = torch.max(output,1)
         return pred
@@ -102,12 +146,12 @@ class Generator_Model(nn.Module):
         :return a float loss for the batch
         """
         # checkout https://discuss.pytorch.org/t/pytorch-equivalence-to-sparse-softmax-cross-entropy-with-logits-in-tensorflow/18727/2
-        loss = nn.CrossEntropyLoss()
+        loss = nn.CrossEtnropyLoss()
         output = loss(logits, labels)
-        return np.mean(output)
+        return torch.mean(output)
 
 
-    def identity_preserving_module(self, org_image, generated_image):
+    def identity_preserving_module(org_image, generated_image):
         """
         Outputs the identity loss for the given image and its generated image.
 
@@ -127,7 +171,7 @@ class Generator_Model(nn.Module):
         pass
 
 
-    def alex_features (self, input_image):
+    def alex_features (input_image):
         # input_image = Image.open('bunny.jpg')
         alexnet_model = models.alexnet(pretrained=True)
         preprocess = transforms.Compose([
@@ -141,50 +185,3 @@ class Generator_Model(nn.Module):
         with torch.no_grad():
             output = alexnet_model(input_batch)
         return output
-
-    def call(self, inputs):
-        """
-        Executes the generator model on the random noise vectors.
-
-        :param inputs: images and conditional feature maps concatenated together.
-
-        :return: prescaled generated images, shape=[batch_size, height, width, channel]
-        """
-        # TODO: Call the forward pass
-        x = self.conv1(inputs)
-        x = self.bn(x)
-        x = self.relu(x)
-        x = self.conv2(x)
-        x = self.bn(x)
-        x = self.relu(x)
-        x = self.bn(x)
-        x = self.conv3(x)
-        x = self.relu(x)
-
-        x = self.deconv1(x)
-        x = self.relu(x)
-        x = self.deconv2(x)
-        x = self.relu(x)
-
-        x = self.conv4(x)
-    
-        m = nn.Tanh()
-        return m(x)
-
-    def loss_function(self, disc_fake_output, real_img, target_age_group):
-        """
-        Outputs the loss given the discriminator output on the generated images.
-
-        :param disc_fake_output: the discrimator output on the generated images, 
-
-        :return: loss, the cross entropy loss, scalar
-        """
-        # TODO: Calculate the loss
-        fake_img = self.call(real_img, target_age_group)
-        generator_loss = (1 / 2 * np.mean(np.square(disc_fake_output - 1)))
-        age_loss = self.calculate_age_loss(fake_img, target_age_group)
-        identity_loss = self.identity_preserving_module(real_img, fake_img)
-        weighted_loss = self.generator_weight * generator_loss + self.age_weight * age_loss + self.identity_weight * identity_loss
-        return weighted_loss
-    
-    
