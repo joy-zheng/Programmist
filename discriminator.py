@@ -36,7 +36,7 @@ class Discriminator_Model(nn.Module):
         """
         x = torch.tensor(inputs).float()
         x = self.leakyrelu(self.conv1(x))
-        labels = torch.tensor(labels[:, 0:64, 0:64, :])
+        labels = torch.tensor(labels[:, :, 0:64, 0:64]).float()
         x = torch.cat((x,labels),1)
         
         # x = np.concatenate((x, labels), 3)

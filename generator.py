@@ -3,6 +3,7 @@ import numpy as np
 import torch as torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 import preprocess
 import dgl
 import torchvision.models as models
@@ -30,18 +31,26 @@ class Generator_Model(nn.Module):
         self.identity_weight = 0.3
     
         # Initialize layers
-        self.conv1 = nn.Conv2d(8, 32, kernel_size=7, stride=1, padding=1)
+        self.conv1 = nn.Conv2d(8, 32, kernel_size=7, stride=1, padding=3)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1)
         self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1)
         self.relu = nn.ReLU()
         self.bn1 = nn.BatchNorm2d(32, eps=0.001)
         self.bn2 = nn.BatchNorm2d(64, eps=0.001)
-        self.bn3 = nn.BatchNorm2d(64, eps=0.001)
-        self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=3)
-        self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=3)
+        self.bn3 = nn.BatchNorm2d(128, eps=0.001)
+        self.bn4 = nn.BatchNorm2d(64, eps=0.001)
+        self.bn5 = nn.BatchNorm2d(32, eps=0.001)
+        self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2)
+        self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2)
         self.conv4 = nn.Conv2d(32, 3, kernel_size=7, stride=1)
         self.optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate)
         self.tanh = nn.Tanh()
+        self.res_block1 = models.resnet.BasicBlock(128, 128)
+        self.res_block2 = models.resnet.BasicBlock(128, 128)
+        self.res_block3 = models.resnet.BasicBlock(128, 128)
+        self.res_block4 = models.resnet.BasicBlock(128, 128)
+        self.res_block5 = models.resnet.BasicBlock(128, 128)
+        self.res_block6 = models.resnet.BasicBlock(128, 128)
 
     def forward(self, inputs, labels):
         """
@@ -50,13 +59,8 @@ class Generator_Model(nn.Module):
         :return: prescaled generated images, shape=[batch_size, height, width, channel]
         """
         # TODO: Call the forward pass
-
-        # x = torch.cat((torch.from_numpy(inputs),torch.from_numpy(labels)),3)
-        print(inputs.shape)
-        print(labels.shape)
         x = np.concatenate((inputs, labels), 1)
         x = torch.tensor(x).float()
-        # x = x.permute(0, 1, 3, 2).float()
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
@@ -65,18 +69,31 @@ class Generator_Model(nn.Module):
         x = self.bn2(x)
         x = self.relu(x)
         print("Conv 2 Shape:", x.shape)
-        x = self.bn3(x)
         x = self.conv3(x)
+        x = self.bn3(x)
         x = self.relu(x)
         print("Conv 3 Shape:", x.shape)
-        x = self.deconv1(x)
-        x = self.relu(x)
-        x = self.deconv2(x)
-        x = self.relu(x)
 
+        # residual blocks x6 (as mentioned in section 3.3 of paper)
+        x = self.res_block1(x)
+        x = self.res_block2(x)
+        x = self.res_block3(x)
+        x = self.res_block4(x)
+        x = self.res_block5(x)
+        x = self.res_block6(x)
+
+        x = self.deconv1(x)
+        x = self.bn4(x)
+        x = self.relu(x)
+        print("Deconv 1 Shape:", x.shape)
+        x = self.deconv2(x)
+        x = self.bn5(x)
+        x = self.relu(x)
+        print("Deconv 2 Shape:", x.shape)
+        
         x = self.conv4(x)
-        print("generator output is ", x.shape)
         x = self.tanh(x)
+        print("Generator output is ", x.shape)
         return x
 
     def loss_function(self, real_img, fake_img, condition):
