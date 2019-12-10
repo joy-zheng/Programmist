@@ -83,7 +83,7 @@ def train(generator, discriminator):
     :return: The average FID score over the epoch
     """
     # Loop over our data until we run out 
-    data_processor = Data_Processor(batch_size = batch_size, img_size = image_size, mode='train')
+    data_processor = Data_Processor(batch_size = batch_size, image_size = image_size, mode='train')
     target_agegroup = None
     total_fid = 0
 
