@@ -8,10 +8,12 @@ import tensorflow_hub as hub
 import numpy as np
 
 batch_size = 30
+image_size = 128
 z_dim = 500
+n_images = 163446
 
 # Train the model for one epoch.
-def train(generator, discriminator, real_images, real_labels_onehot, fake_labels_onehot):
+def train(generator, discriminator):
     """
     Train the model for one epoch. Save a checkpoint every 500 or so batches.
 
@@ -24,15 +26,18 @@ def train(generator, discriminator, real_images, real_labels_onehot, fake_labels
     """
     # Loop over our data until we run out
     #batch = getnextbatch(imgs, batch_id)
+    data_processor = Data_Processor(batch_size = batch_size, image_size = image_size, mode='train')
 
-    
     target_agegroup = None
-    for i in range (0, len(real_images), batch_size):
+
+    for i in range (int(n_images/batch_size)):
     # for iteration, batch in enumerate(dataset_iterator):
         # TODO: Train the model
-        batch = real_images[i:i+batch_size]
-        batch_real_labels = real_labels_onehot[i:i+batch_size]
-        batch_fake_labels = fake_labels_onehot[i:i+batch_size]
+        # batch = real_images[i:i+batch_size]
+        # batch_real_labels = real_labels_onehot[i:i+batch_size]
+        # batch_fake_labels = fake_labels_onehot[i:i+batch_size]
+        batch, batch_real_labels, batch_fake_labels = data_processor.get_next_batch_image()[0:2] #Fancy way of getting a new batch of imgs and labels
+
         with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
             g_output = generator(batch, batch_real_labels)
             
@@ -42,8 +47,6 @@ def train(generator, discriminator, real_images, real_labels_onehot, fake_labels
             d_fake2_logit = discriminator(batch, batch_fake_labels)
             #real img, real label
             d_real_logit = discriminator(batch, batch_real_labels)
-
-
 
             g_loss = generator.loss_function(batch, g_output, condition = true_label_64)
             d_loss = discriminator.loss_function(d_real_logit, d_fake1_logit, d_fake2_logit)
@@ -83,17 +86,10 @@ def test(generator):
 
 def main():
     # Load a batch of images (to feed to the discriminator)
-    data_processor = Data_Processor()
-    celeb_metadata, image_metadata = data_processor.get_metadata()
-    real_images, real_labels_onehot, fake_labels_onehot, train_label_pairs, paths = data_processor.get_image()
-    group_labels = image_metadata[1]
-    print(group_labels)
-    print("------------Preprocessing done.------------")
     # Initialize generator and discriminator models
     generator = Generator_Model()
     discriminator = Discriminator_Model()
-
-    train(generator, discriminator, real_images, real_labels_onehot, fake_labels_onehot)
+    train(generator, discriminator)
     try:
         # Specify an invalid GPU device
         with tf.device('/device:' + args.device):
