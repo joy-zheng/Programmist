@@ -22,7 +22,8 @@ class Discriminator_Model(nn.Module):
         self.conv4 = nn.Conv2d(256, 512, kernel_size=4, stride=2)
         self.batchnorm4 = nn.BatchNorm2d(512, eps=0.001, track_running_stats=True)
         self.conv5 = nn.Conv2d(512, 512, kernel_size=4, stride=2)
-
+        self.optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate)
+        
 
 
 
