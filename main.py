@@ -25,7 +25,7 @@ def train(generator, discriminator):
     """
     # Loop over our data until we run out
     #batch = getnextbatch(imgs, batch_id)
-    data_processor = Data_Processor(batch_size = batch_size, image_size = image_size)
+    data_processor = Data_Processor(batch_size = batch_size, image_size = image_size, mode='train')
     target_agegroup = None
     for i in range (0, len(real_images), batch_size):
     # for iteration, batch in enumerate(dataset_iterator):
