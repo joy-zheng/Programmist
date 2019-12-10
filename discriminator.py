@@ -56,8 +56,8 @@ class Discriminator_Model(nn.Module):
         :return: loss, the combined cross entropy loss, scalar
         """
       # TODO: Calculate the loss
-        d_loss_real = np.mean(np.square(disc_real_output - 1.))
-        d_loss_fake1 = np.mean(np.square(disc_fake1_output))
-        d_loss_fake2 = np.mean(np.square(disc_fake2_output))
+        d_loss_real = torch.mean(torch.pow((disc_real_output - 1.), 2))
+        d_loss_fake1 = torch.mean(torch.pow(disc_fake1_output, 2))
+        d_loss_fake2 = torch.mean(torch.pow(disc_fake2_output, 2))
         loss = (1. / 2 * (d_loss_real + 1. / 2 * (d_loss_fake1 + d_loss_fake2)))
         return loss
