@@ -5,10 +5,10 @@ from scipy.io import loadmat
 from random import randint
 
 class Data_Processor:
-    def __init__(self, batch_size = 100, img_size= 128, shuffle=True, mode='train'):
+    def __init__(self, batch_size = 100, image_size= 128, shuffle=True, mode='train'):
         self.metadata_dir = 'data/celebrity2000_meta.mat'
         self.image_dir  = 'data/CACD2000' 
-        self.img_size  = img_size 
+        self.img_size  = image_size 
         self.batch_size = batch_size
         self.age_groups = [range(11, 21), range(21, 31), range(31, 41),range(41, 51), range(51, 151)]
         self.pointer = 0
