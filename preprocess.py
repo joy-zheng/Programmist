@@ -53,7 +53,7 @@ class Data_Processor:
             :return: arrays  of rgb images and paths
         """ 
         paths = os.listdir(self.image_dir)[0:1000]
-        imgs = np.ndarray([len(paths), self.img_size, self.img_size, 3])
+        imgs = np.ndarray([len(paths), 3, self.img_size, self.img_size])
         for i in range(len(paths)):
             img = cv2.imread(os.path.join(self.image_dir, paths[i]))
             #uncomment below if  you want to display imgs
@@ -63,6 +63,7 @@ class Data_Processor:
             #     cv2.destroyAllWindows() 
             img = cv2.resize(img, (self.img_size, self.img_size))
             img = img.astype(np.float32) 
+            img =  np.moveaxis(img, -1, 0) #swap axes
             imgs[i] = img 
         celeb_metadata, image_metadata = self.get_metadata()
         age_groups = image_metadata[1][0:len(paths)] 
@@ -90,4 +91,4 @@ class Data_Processor:
     def get_next_batch(self):
         batch = None
         return batch
-    
+     
