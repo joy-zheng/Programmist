@@ -7,12 +7,18 @@ import numpy as np
 from imageio import imwrite
 import os
 import argparse
-
+import torch
 
 batch_size = 30
 image_size = 128
 z_dim = 500
 n_images = 163446
+
+# Killing optional CPU driver warnings
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+gpu_available = torch.cuda.is_available()
+print("GPU Available: ", gpu_available)
 
 
 parser = argparse.ArgumentParser(description='IPCGAN')
