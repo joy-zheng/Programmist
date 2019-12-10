@@ -34,18 +34,14 @@ class Discriminator_Model(nn.Module):
 
         :return: a batch of values indicating whether the image is real or fake, shape=[batch_size, 1]
         """
-        x = torch.tensor(inputs).float()
-        x = self.leakyrelu(self.conv1(x))
-        labels = torch.tensor(labels[:, :, 0:64, 0:64]).float()
+        x = self.leakyrelu(self.conv1(inputs))
+        labels = labels[:, :, 0:64, 0:64]
         x = torch.cat((x,labels),1)
-        
-        # x = np.concatenate((x, labels), 3)
         x = self.leakyrelu(self.batchnorm2(self.conv2(x)))
         x = self.leakyrelu(self.batchnorm3(self.conv3(x)))
         x = self.leakyrelu(self.batchnorm4(self.conv4(x)))
         x = self.conv5(x)
         return x
-        # return value
 
     def loss_function(self, disc_real_output, disc_fake1_output, disc_fake2_output):
         """
@@ -57,13 +53,8 @@ class Discriminator_Model(nn.Module):
         :return: loss, the combined cross entropy loss, scalar
         """
       # TODO: Calculate the loss
-
         d_loss_real = np.mean(np.square(disc_real_output - 1.))
         d_loss_fake1 = np.mean(np.square(disc_fake1_output))
         d_loss_fake2 = np.mean(np.square(disc_fake2_output))
-
         loss = (1. / 2 * (d_loss_real + 1. / 2 * (d_loss_fake1 + d_loss_fake2)))
-
-        # self.d_loss = (1. / 2 * (d_loss_real + 1. / 2 * (d_loss_fake1 + d_loss_fake2))) * self.gan_loss_weight
-        # loss = 1/2 * nn.CrossEntropyLoss(np.square(disc_real_output - 1)) + 1/2 * nn.CrossEntropyLoss(np.square(disc_fake_output))
         return loss

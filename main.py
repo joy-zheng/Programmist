@@ -82,18 +82,18 @@ def train(generator, discriminator):
     """
     # Loop over our data until we run out
     #batch = getnextbatch(imgs, batch_id)
-    data_processor = Data_Processor(batch_size = batch_size, img_size = image_size, mode='train')
+    data_processor = Data_Processor(batch_size = batch_size, image_size = image_size, mode='train')
 
     target_agegroup = None
 
     for i in range (int(n_images/batch_size)):
     # for iteration, batch in enumerate(dataset_iterator):
         # TODO: Train the model
-        # batch = real_images[i:i+batch_size]
-        # batch_real_labels = real_labels_onehot[i:i+batch_size]
-        # batch_fake_labels = fake_labels_onehot[i:i+batch_size]
         batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
-
+        batch = torch.tensor(batch).float()
+        batch_real_labels = torch.tensor(batch_real_labels).float()
+        batch_fake_labels = torch.tensor(batch_fake_labels).float()
+        
         # with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
         g_output = generator(batch, batch_real_labels)
         

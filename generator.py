@@ -59,8 +59,7 @@ class Generator_Model(nn.Module):
         :return: prescaled generated images, shape=[batch_size, height, width, channel]
         """
         # TODO: Call the forward pass
-        x = np.concatenate((inputs, labels), 1)
-        x = torch.tensor(x).float()
+        x = torch.cat((inputs, labels), 1)
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
@@ -104,7 +103,7 @@ class Generator_Model(nn.Module):
         """
         # TODO: Calculate the loss
         # fake_img = self.call(real_img, target_ae_group)
-        generator_loss = (1 / 2 * np.mean(np.square(fake_img - 1)))
+        generator_loss = (1 / 2 * torch.mean((fake_img - 1).pow(2)))
         age_loss = self.calculate_age_loss(fake_img, condition)
         identity_loss = self.identity_preserving_module(real_img, fake_img)
         weighted_loss = self.generator_weight * generator_loss + self.age_weight * age_loss + self.identity_weight * identity_loss
@@ -141,7 +140,7 @@ class Generator_Model(nn.Module):
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
         # assuming input is numpy array
-        fake_img = np.swapaxes(np.swapaxes(fake_img, 1,3), 2, 3)
+        fake_img = fake_img.permute(0,3,2,1)
         preprocess = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
