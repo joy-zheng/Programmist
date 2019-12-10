@@ -69,11 +69,11 @@ class Data_Processor:
         age_groups = image_metadata[1][0:len(paths)] 
         train_label_pairs = self.get_fakelabels(age_groups)
         fake_labels =  train_label_pairs[:,1]
-        real_labels_onehot = np.zeros((len(paths), self.img_size, self.img_size, 5))
-        real_labels_onehot[np.arange(len(paths)),:,:, age_groups] = np.ones((self.img_size,self.img_size)) 
+        real_labels_onehot = np.zeros((len(paths), 5, self.img_size, self.img_size))
+        real_labels_onehot[np.arange(len(paths)), age_groups, :,:] = np.ones((self.img_size,self.img_size)) 
 
-        fake_labels_onehot = np.zeros((len(paths), self.img_size, self.img_size, 5))
-        fake_labels_onehot[np.arange(len(paths)),:,:, fake_labels] = np.ones((self.img_size,self.img_size)) 
+        fake_labels_onehot = np.zeros((len(paths), 5, self.img_size, self.img_size))
+        fake_labels_onehot[np.arange(len(paths)), fake_labels, :,:] = np.ones((self.img_size,self.img_size)) 
         # stacked = np.concatenate((imgs, onehot), axis = 3) 
         return imgs, real_labels_onehot, fake_labels_onehot, train_label_pairs, paths
 
@@ -89,6 +89,10 @@ class Data_Processor:
         return label_pairs
 
     def get_next_batch(self):
+        n = self.batch_size*self.pointer
+        images = 
         batch = None
+
+        self.pointer += 1
         return batch
      
