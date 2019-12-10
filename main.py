@@ -10,6 +10,7 @@ import numpy as np
 batch_size = 30
 image_size = 128
 z_dim = 500
+n_images = 163446
 
 # Train the model for one epoch.
 def train(generator, discriminator):
@@ -26,8 +27,10 @@ def train(generator, discriminator):
     # Loop over our data until we run out
     #batch = getnextbatch(imgs, batch_id)
     data_processor = Data_Processor(batch_size = batch_size, image_size = image_size, mode='train')
+
     target_agegroup = None
-    for i in range (0, len(real_images), batch_size):
+
+    for i in range (int(n_images/batch_size)):
     # for iteration, batch in enumerate(dataset_iterator):
         # TODO: Train the model
         # batch = real_images[i:i+batch_size]
@@ -44,8 +47,6 @@ def train(generator, discriminator):
             
             #real img, real label
             d_real_logit = discriminator(batch, batch_real_labels)
-
-
 
             g_loss = generator.loss_function(batch, g_output, condition = true_label_64)
             d_loss = discriminator.loss_function(d_real_logit, d_fake1_logit, d_fake2_logit)
