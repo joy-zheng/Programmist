@@ -14,8 +14,8 @@ class Discriminator_Model(nn.Module):
         """
 
         self.leakyrelu = nn.LeakyReLU(0.2)
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=4, stride=2)
-        self.conv2 = nn.Conv2d(64, 128, kernel_size=4, stride=2)
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=4, stride=2, padding=(1,1))
+        self.conv2 = nn.Conv2d(69, 128, kernel_size=4, stride=2)
         self.batchnorm2 = nn.BatchNorm2d(128, eps=0.001, track_running_stats=True)
         self.conv3 = nn.Conv2d(128, 256, kernel_size=4, stride=2)
         self.batchnorm3 = nn.BatchNorm2d(256, eps=0.001, track_running_stats=True)
@@ -23,28 +23,7 @@ class Discriminator_Model(nn.Module):
         self.batchnorm4 = nn.BatchNorm2d(512, eps=0.001, track_running_stats=True)
         self.conv5 = nn.Conv2d(512, 512, kernel_size=4, stride=2)
 
-        # self.main = nn.Sequential(
-        #     # input is (nc) x 64 x 64
-        #     nn.Conv2d(3, 64, kernel_size = 4, stride = 2),
-        #     nn.LeakyReLU(0.2, inplace=True),
-        #     # state size. (ndf) x 32 x 32
-        #     # torch.cat(condition,1)
-        #     nn.Conv2d(64, 128, kernel_size = 4, stride = 2),
-        #     nn.BatchNorm2d(128),
-        #     nn.LeakyReLU(0.2, inplace=True),
-        #     # state size. (ndf*2) x 16 x 16
-        #     nn.Conv2d(128, 256, kernel_size = 4, stride = 2),
-        #     nn.BatchNorm2d(256),
-        #     nn.LeakyReLU(0.2, inplace=True),
-        #     # state size. (ndf*4) x 8 x 8
-        #     nn.Conv2d(256, 512, kernel_size = 4, stride = 2),
-        #     nn.BatchNorm2d(512),
-        #     nn.LeakyReLU(0.2, inplace=True),
-        #     # state size. (ndf*8) x 4 x 4
-        #     nn.Conv2d(512, 512, kernel_size = 4, stride = 2),
-        #     # nn.Sigmoid()
-        # )
-        # # pass
+
 
 
     def forward(self, inputs, labels):
@@ -55,9 +34,11 @@ class Discriminator_Model(nn.Module):
 
         :return: a batch of values indicating whether the image is real or fake, shape=[batch_size, 1]
         """
-        x = self.lrelu(self.conv1(inputs))
-        labels = labels[0:64, 0:64, :]
-        x = torch.cat((x,labels),3)
+        x = torch.tensor(inputs).float()
+        x = self.leakyrelu(self.conv1(x))
+        labels = torch.tensor(labels[:, 0:64, 0:64, :])
+        x = torch.cat((x,labels),1)
+        
         # x = np.concatenate((x, labels), 3)
         x = self.leakyrelu(self.batchnorm2(self.conv2(x)))
         x = self.leakyrelu(self.batchnorm3(self.conv3(x)))
