@@ -76,7 +76,7 @@ def train(generator, discriminator):
     """
     # Loop over our data until we run out
     #batch = getnextbatch(imgs, batch_id)
-    data_processor = Data_Processor(batch_size = batch_size, image_size = image_size, mode='train')
+    data_processor = Data_Processor(batch_size = batch_size, img_size = image_size, mode='train')
 
     target_agegroup = None
 
@@ -86,7 +86,7 @@ def train(generator, discriminator):
         # batch = real_images[i:i+batch_size]
         # batch_real_labels = real_labels_onehot[i:i+batch_size]
         # batch_fake_labels = fake_labels_onehot[i:i+batch_size]
-        batch, batch_real_labels, batch_fake_labels = data_processor.get_next_batch_image()[0:2] #Fancy way of getting a new batch of imgs and labels
+        batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
 
         # with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
         g_output = generator(batch, batch_real_labels)
