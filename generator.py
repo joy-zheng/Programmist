@@ -30,14 +30,16 @@ class Generator_Model(nn.Module):
         self.identity_weight = 0.3
     
         # Initialize layers
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=7)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3)
-        self.conv3 = nn.Conv2d(64, 128, kernel_size=3)
+        self.conv1 = nn.Conv2d(8, 32, kernel_size=7, stride=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=2)
+        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=2)
         self.relu = nn.ReLU()
-        self.bn = nn.BatchNorm2d(20)
-        self.deconv1 = nn.ConvTranspose2d(3, 64, kernel_size=3)
+        self.bn1 = nn.BatchNorm2d(32)
+        self.bn2 = nn.BatchNorm2d(64)
+        self.bn3 = nn.BatchNorm2d(64)
+        self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=3)
         self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=3)
-        self.conv4 = nn.Conv2d(32, 3, kernel_size=7)
+        self.conv4 = nn.Conv2d(32, 3, kernel_size=7, stride=1)
         self.optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate)
 
     def forward(self, inputs, labels):
@@ -47,15 +49,18 @@ class Generator_Model(nn.Module):
         :return: prescaled generated images, shape=[batch_size, height, width, channel]
         """
         # TODO: Call the forward pass
-        x = torch.cat((inputs,labels),3)
-        # x = np.concatenate((inputs, labels), 3)
+
+        # x = torch.cat((torch.from_numpy(inputs),torch.from_numpy(labels)),3)
+        x = np.concatenate((inputs, labels), 3)
+        x = torch.tensor(x)
+        x = x.permute(0, 3, 1, 2).float()
         x = self.conv1(x)
-        x = self.bn(x)
+        x = self.bn1(x)
         x = self.relu(x)
         x = self.conv2(x)
-        x = self.bn(x)
+        x = self.bn2(x)
         x = self.relu(x)
-        x = self.bn(x)
+        x = self.bn3(x)
         x = self.conv3(x)
         x = self.relu(x)
 
