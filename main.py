@@ -94,30 +94,30 @@ def train(generator, discriminator):
         batch_real_labels = torch.tensor(batch_real_labels).float()
         batch_fake_labels = torch.tensor(batch_fake_labels).float()
         
-        # # with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
+        # with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
         g_output = generator(batch, batch_real_labels)
         
-        # #fake img, real label
-        # d_fake1_logit = discriminator(g_output,  batch_real_labels)
-        #             #real img, fake label
-        # d_fake2_logit = discriminator(batch, batch_fake_labels)
-        # #real img, real label
-        # d_real_logit = discriminator(batch, batch_real_labels)
+        #fake img, real label
+        d_fake1_logit = discriminator(g_output,  batch_real_labels)
+                    #real img, fake label
+        d_fake2_logit = discriminator(batch, batch_fake_labels)
+        #real img, real label
+        d_real_logit = discriminator(batch, batch_real_labels)
 
-        # g_loss = generator.loss_function(batch, g_output, batch_real_labels)
-        # d_loss = discriminator.loss_function(d_real_logit, d_fake1_logit, d_fake2_logit)
+        g_loss = generator.loss_function(batch, g_output, batch_real_labels)
+        d_loss = discriminator.loss_function(d_real_logit, d_fake1_logit, d_fake2_logit)
         
-        # generator.optimizer.zero_grad()
-        # g_loss.backward()
-        # generator.optimizer.step()
-        # discriminator.optimizer.zero_grad()
-        # d_loss.backward()
-        # discriminator.optimizer.step()
-        print(batch.shape)
-        batch_fid =  np.moveaxis(np.asarray(batch.detach()), 1, 3) #swap axes
-        gen_fid =  np.moveaxis(np.asarray(g_output.detach()), 1, 3) #swap axes
-        print(batch.shape)
+        generator.optimizer.zero_grad()
+        g_loss.backward()
+        generator.optimizer.step()
+        discriminator.optimizer.zero_grad() 
+        d_loss.backward()
+        discriminator.optimizer.step()
+
         if i % 500 == 0:
+            #make the axes match the original shape
+            batch_fid =  np.moveaxis(np.asarray(batch.detach()), 1, 3) #swap axes
+            gen_fid =  np.moveaxis(np.asarray(g_output.detach()), 1, 3) #swap axes
             current_fid = calculate_fid(batch_fid, gen_fid, use_multiprocessing = False, batch_size = batch_size)
             total_fid += current_fid 
             print('**** INCEPTION DISTANCE: %g ****' % current_fid) 
