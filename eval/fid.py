@@ -170,8 +170,8 @@ def preprocess_image(im):
     im = cv2.resize(im, (299, 299))
     im = np.rollaxis(im, axis=2)
     im = torch.from_numpy(im)
-    assert im.max() <= 1.0
-    assert im.min() >= 0.0
+    # assert im.max() <= 1.0
+    # assert im.min() >= 0.0
     assert im.dtype == torch.float32
     assert im.shape == (3, 299, 299)
 
@@ -199,8 +199,8 @@ def preprocess_images(images, use_multiprocessing):
     else:
         final_images = torch.stack([preprocess_image(im) for im in images], dim=0)
     assert final_images.shape == (images.shape[0], 3, 299, 299)
-    assert final_images.max() <= 1.0
-    assert final_images.min() >= 0.0
+    # assert final_images.max() <= 1.0
+    # assert final_images.min() >= 0.0
     assert final_images.dtype == torch.float32
     return final_images
 

@@ -8,7 +8,7 @@ from imageio import imwrite
 import os
 import argparse
 import torch 
-from eval.fid_score import *
+from eval.fid import *
 from eval.inception import InceptionV3
 
 batch_size = 30
@@ -94,28 +94,31 @@ def train(generator, discriminator):
         batch_real_labels = torch.tensor(batch_real_labels).float()
         batch_fake_labels = torch.tensor(batch_fake_labels).float()
         
-        # with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
+        # # with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
         g_output = generator(batch, batch_real_labels)
         
-        #fake img, real label
-        d_fake1_logit = discriminator(g_output,  batch_real_labels)
-                    #real img, fake label
-        d_fake2_logit = discriminator(batch, batch_fake_labels)
-        #real img, real label
-        d_real_logit = discriminator(batch, batch_real_labels)
+        # #fake img, real label
+        # d_fake1_logit = discriminator(g_output,  batch_real_labels)
+        #             #real img, fake label
+        # d_fake2_logit = discriminator(batch, batch_fake_labels)
+        # #real img, real label
+        # d_real_logit = discriminator(batch, batch_real_labels)
 
-        g_loss = generator.loss_function(batch, g_output, batch_real_labels)
-        d_loss = discriminator.loss_function(d_real_logit, d_fake1_logit, d_fake2_logit)
+        # g_loss = generator.loss_function(batch, g_output, batch_real_labels)
+        # d_loss = discriminator.loss_function(d_real_logit, d_fake1_logit, d_fake2_logit)
         
-        generator.optimizer.zero_grad()
-        g_loss.backward()
-        generator.optimizer.step()
-        discriminator.optimizer.zero_grad()
-        d_loss.backward()
-        discriminator.optimizer.step()
-         
+        # generator.optimizer.zero_grad()
+        # g_loss.backward()
+        # generator.optimizer.step()
+        # discriminator.optimizer.zero_grad()
+        # d_loss.backward()
+        # discriminator.optimizer.step()
+        print(batch.shape)
+        batch_fid =  np.moveaxis(np.asarray(batch.detach()), 1, 3) #swap axes
+        gen_fid =  np.moveaxis(np.asarray(g_output.detach()), 1, 3) #swap axes
+        print(batch.shape)
         if i % 500 == 0:
-            current_fid = fid_function(batch, g_output)
+            current_fid = calculate_fid(batch_fid, gen_fid, use_multiprocessing = False, batch_size = batch_size)
             total_fid += current_fid 
             print('**** INCEPTION DISTANCE: %g ****' % current_fid) 
 
@@ -126,14 +129,14 @@ def train(generator, discriminator):
     avg_fid = total_fid/i
     return avg_fid
 
-def fid_function(real_images, generated_images, dims=2048, cuda = gpu_available):
-    block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
-    model = InceptionV3([block_idx])
-    if cuda:
-        model.cuda() 
-    mr, sr = calculate_activation_statistics(real_images, model, 16, dims, cuda)
-    mf, sf = calculate_activation_statistics(generated_images, model, 16, dims, cuda)
-    return calculate_frechet_distance(mr, sr, mf, sf)
+# def fid_function(real_images, generated_images, dims=2048, cuda = gpu_available):
+#     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
+#     model = InceptionV3([block_idx])
+#     if cuda:
+#         model.cuda() 
+#     mr, sr = calculate_activation_statistics(real_images, model, 16, dims, cuda)
+#     mf, sf = calculate_activation_statistics(generated_images, model, 16, dims, cuda)
+#     return calculate_frechet_distance(mr, sr, mf, sf)
 
 # Test the model by generating some samples.
 def test(generator):
