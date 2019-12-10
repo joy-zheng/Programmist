@@ -89,9 +89,11 @@ def train(generator, discriminator):
 
     for i in range (int(n_images/batch_size)):
     # for iteration, batch in enumerate(dataset_iterator):
-        # TODO: Train the model 
         batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
-
+        batch = torch.tensor(batch).float()
+        batch_real_labels = torch.tensor(batch_real_labels).float()
+        batch_fake_labels = torch.tensor(batch_fake_labels).float()
+        
         # with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
         g_output = generator(batch, batch_real_labels)
         
@@ -108,7 +110,6 @@ def train(generator, discriminator):
         generator.optimizer.zero_grad()
         g_loss.backward()
         generator.optimizer.step()
-
         discriminator.optimizer.zero_grad()
         d_loss.backward()
         discriminator.optimizer.step()
