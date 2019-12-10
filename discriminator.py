@@ -13,6 +13,8 @@ class Discriminator_Model(nn.Module):
         The model for the discriminator network is defined here.
         """
 
+        self.learning_rate = 5e-4
+
         self.leakyrelu = nn.LeakyReLU(0.2)
         self.conv1 = nn.Conv2d(3, 64, kernel_size=4, stride=2, padding=(1,1))
         self.conv2 = nn.Conv2d(69, 128, kernel_size=4, stride=2)
