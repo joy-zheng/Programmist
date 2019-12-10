@@ -5,7 +5,7 @@ from scipy.io import loadmat
 from random import randint
 
 class Data_Processor:
-    def __init__(self, batch_size = 30, img_size= 128, shuffle=True, mode='train'):
+    def __init__(self, batch_size = 100, img_size= 128, shuffle=True, mode='train'):
         self.metadata_dir = 'data/celebrity2000_meta.mat'
         self.image_dir  = 'data/CACD2000' 
         self.img_size  = img_size 
@@ -13,7 +13,7 @@ class Data_Processor:
         self.age_groups = [range(11, 21), range(21, 31), range(31, 41),range(41, 51), range(51, 151)]
         self.pointer = 0
 
-    def get_metadata(self):
+    def get_batch_metadata(self):
         """
         Gets the metadata from metadata directory and returns the metadata for both celebrities and images.
 
@@ -21,9 +21,8 @@ class Data_Processor:
 
             :return: two arrays of celebrity and image metadata
         """ 
-        x = loadmat(self.metadata_dir) 
+        x = loadmat(self.metadata_dir)
         datatype = ['celebrityData', 'celebrityImageData']
-
         names = x[datatype[0]][0][0][0]
         identity = x[datatype[0]][0][0][1]
         birth = x[datatype[0]][0][0][2]
@@ -43,7 +42,7 @@ class Data_Processor:
 
         return celeb_metadata, image_metadata
 
-    def get_image(self):
+    def get_next_batch_image(self):
         """
         Gets the image from  image path and returns the image.
             Given an image data directory, this function opens and decodes the image stored in the directory.
@@ -52,7 +51,9 @@ class Data_Processor:
 
             :return: arrays  of rgb images and paths
         """ 
-        paths = os.listdir(self.image_dir)[0:1000]
+        n = self.batch_size*self.pointer #start of the batch
+
+        paths = os.listdir(self.image_dir)[n:n+self.batch_size]
         imgs = np.ndarray([len(paths), 3, self.img_size, self.img_size])
         for i in range(len(paths)):
             img = cv2.imread(os.path.join(self.image_dir, paths[i]))
@@ -65,16 +66,17 @@ class Data_Processor:
             img = img.astype(np.float32) 
             img =  np.moveaxis(img, -1, 0) #swap axes
             imgs[i] = img 
-        celeb_metadata, image_metadata = self.get_metadata()
-        age_groups = image_metadata[1][0:len(paths)] 
-        train_label_pairs = self.get_fakelabels(age_groups)
+        image_metadata = self.get_batch_metadata()[1]
+        real_labels = image_metadata[1][n:n+self.batch_size]
+        train_label_pairs = self.get_fakelabels(real_labels)
         fake_labels =  train_label_pairs[:,1]
         real_labels_onehot = np.zeros((len(paths), 5, self.img_size, self.img_size))
-        real_labels_onehot[np.arange(len(paths)), age_groups, :,:] = np.ones((self.img_size,self.img_size)) 
+        real_labels_onehot[np.arange(len(paths)), real_labels, :,:] = np.ones((self.img_size,self.img_size)) 
 
         fake_labels_onehot = np.zeros((len(paths), 5, self.img_size, self.img_size))
         fake_labels_onehot[np.arange(len(paths)), fake_labels, :,:] = np.ones((self.img_size,self.img_size)) 
         # stacked = np.concatenate((imgs, onehot), axis = 3) 
+        self.pointer += 1
         return imgs, real_labels_onehot, fake_labels_onehot, train_label_pairs, paths
 
     def get_fakelabels(self, true_labels):
@@ -87,12 +89,13 @@ class Data_Processor:
             fake_label = (true_label+rand)%n
             label_pairs[i,1] = fake_label 
         return label_pairs
-
-    def get_next_batch(self):
-        n = self.batch_size*self.pointer
-        images = 
-        batch = None
-
-        self.pointer += 1
-        return batch
-     
+ 
+    
+p =  Data_Processor()
+batch = p.get_next_batch_image()[0]
+print(batch.shape)
+print(p.pointer)
+print("TWO")
+batch = p.get_next_batch_image()[0]
+print(batch.shape)
+print(p.pointer)
