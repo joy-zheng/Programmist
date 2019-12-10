@@ -1,0 +1,11 @@
+name: clsgan
+channels:
+    - conda-forge
+    - pytorch
+dependencies:
+    - python=3.6.*
+    - numpy=1.16.2
+    - opencv=4.0.0
+    - scipy=1.2.1
+    - torchvision=0.1.8
+    - dgl=10.1
