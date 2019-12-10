@@ -6,4 +6,4 @@ We are implementing the Face Aging With Identity-Preserved Conditional Generativ
 Face-aging is a new and exciting field in Deep Learning. With the rising popularity of FaceApp and people’s concerns about privacy, we were drawn to implement our version of an aging-app and think over issues of data privacy, deep fakes and identity theft.
  
 ## How to Train (Cross-Age Celebrity Dataset)
-1. Download the [Cross-Age Celebrity Dataset metadata](http://www.umiacs.umd.edu/~sirius/CACD/celebrity2000_meta.mat)(4.4G) and [Face images](https://drive.google.com/file/d/0B3zF40otoXI3OTR0Y0MtNnVhNFU/)(3.5G). Then move them to the `data\` directory. 
+1. Download the [Cross-Age Celebrity Dataset metadata](http://www.umiacs.umd.edu/~sirius/CACD/celebrity2000_meta.mat)(817K) and [Face images](https://drive.google.com/file/d/0B3zF40otoXI3OTR0Y0MtNnVhNFU/)(3.5G). Then move them to the `data\` directory. 
