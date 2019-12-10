@@ -48,7 +48,7 @@ except ImportError:
     # If not tqdm is not available, provide a mock version of it
     def tqdm(x): return x
 
-from inception import InceptionV3
+from .inception import InceptionV3 
 
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument('path', type=str, nargs=2,
