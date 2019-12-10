@@ -95,7 +95,7 @@ class Generator_Model(nn.Module):
         print("Generator output is ", x.shape)
         return x
 
-    def loss_function(self, real_img, fake_img, condition):
+    def loss_function(self, real_img, fake_img, fake_age):
         """
         Outputs the loss given the discriminator output on the generated images.
         :param disc_fake_output: the discrimator output on the generated images, 
@@ -104,20 +104,22 @@ class Generator_Model(nn.Module):
         # TODO: Calculate the loss
         # fake_img = self.call(real_img, target_ae_group)
         generator_loss = (1 / 2 * torch.mean((fake_img - 1).pow(2)))
-        age_loss = self.calculate_age_loss(fake_img, condition)
+        print('age label shape', fake_age.shape)
+        age_loss = self.calculate_age_loss(fake_img, fake_age) 
+        
         identity_loss = self.identity_preserving_module(real_img, fake_img)
         weighted_loss = self.generator_weight * generator_loss + self.age_weight * age_loss + self.identity_weight * identity_loss
         return weighted_loss
     
-    def calculate_age_loss(self, fake_img, target_age_group):
+    def calculate_age_loss(self, fake_img, fake_age_labels):
         """
         Calculate age loss for generator
         :param batched_real_img: a batch of training images, shape=[batch_size, img_height, img_width, num_channel]
-        :param target_age_grouup: a list of target age groups, shape=[num_age_group]
+        :param target_age_grouup: a list of target age groups, shape=[batch_size,num_age_group]
         :return a float loss for the batch
         """
-        fake_age = self.classify_age_alexnet(fake_img)
-        age_loss = self.softmax_cross_entropy_loss(fake_age, target_age_group)
+        fake_age_logits = self.classify_age_alexnet(fake_img)
+        age_loss = self.softmax_cross_entropy_loss(fake_age_logits, fake_age_labels)
         #    age_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
         #                logits=fake_age, labels=target_age_group))
         return age_loss
@@ -126,45 +128,48 @@ class Generator_Model(nn.Module):
         """
         Use a pre-trained alexnet age classifier to label the fake images with age groups
         :param fake_img: a set of fake images generated from the batch, shape=[batch_size, img_height, img_width, num_channel]
-        :return fake_age, shape=[batch_size, num_age_group]
+        :return fake_age, shape=[batch_size]
         """
         # https://pytorch.org/hub/pytorch_vision_alexnet/ for reference
+        print('in', fake_img.shape)
+        # TODO fake_img = fake_img.permute()
         num_age_group = 5
         alexnet = models.alexnet(pretrained=True)
         alexnet.classifier[6] = nn.Linear(in_features=4096, out_features=num_age_group)
         alexnet.eval()
-        preprocess = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
+        prepare = transforms.Compose([
+            # transforms.Resize(256),
+            # transforms.CenterCrop(224),
+            # transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
-        # assuming input is numpy array
-        fake_img = fake_img.permute(0,3,2,1)
-        preprocess = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
-        processed_img = []
+        img_stack = []
+        
         for img in fake_img:
-            sample = preprocess(img)
-        processed_img = torch.Tensor(processed_img)
-        output = alexnet(processed_img)
-        _, pred = np.max(output,1)
-        return pred
+            sample = prepare(img)
+            img_stack.append(sample)
+        prepared_img = torch.stack(img_stack)
+        output = alexnet(prepared_img)
+        return output
 
     def softmax_cross_entropy_loss(self, logits, labels):
         """
         Calculate softmax cross entropy loss from given logits and labels
         
-        :param logits: fake_age, shape=[batch_size, num_age_group]
-        :param labels: target_age_grouup, shape=[num_age_group]
+        :param logits: fake_age, shape=[batch_size]
+        :param labels: target_age_grouup, shape=[batch_size, num_age_group]
         :return a float loss for the batch
         """
         # checkout https://discuss.pytorch.org/t/pytorch-equivalence-to-sparse-softmax-cross-entropy-with-logits-in-tensorflow/18727/2
         loss = nn.CrossEntropyLoss()
+        # labels = labels.astype(np.float32)
+        labels = torch.Tensor(labels).long()
+        # print('lables',labels.shape)
+        print('label sample', labels[0])
+        print('logits', logits.shape)
+        print('logit sample', logits[0])
         output = loss(logits, labels)
-        return np.mean(output)
+        return torch.mean(output)
 
 
     def identity_preserving_module(self, org_image, generated_image):
@@ -184,13 +189,13 @@ class Generator_Model(nn.Module):
     def alex_features (self, input_image):
         # input_image = Image.open('bunny.jpg')
         alexnet_model = models.alexnet(pretrained=True)
-        preprocess = transforms.Compose([
+        process = transforms.Compose([
             transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
+            # transforms.CenterCrop(224),
+            # transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
-        input_tensor = preprocess(input_image)
+        input_tensor = process(input_image)
         input_batch = input_tensor.unsqueeze(0)
         with torch.no_grad():
             output = alexnet_model(input_batch)
