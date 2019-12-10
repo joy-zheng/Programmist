@@ -51,8 +51,7 @@ class Data_Processor:
 
             :return: arrays  of rgb images and paths
         """ 
-        n = self.batch_size*self.pointer #start of the batch
-        print(len(os.listdir(self.image_dir)))
+        n = self.batch_size*self.pointer #start of the batch 
         paths = os.listdir(self.image_dir)[n:n+self.batch_size]
         imgs = np.ndarray([len(paths), 3, self.img_size, self.img_size])
         for i in range(len(paths)):
@@ -74,8 +73,7 @@ class Data_Processor:
         real_labels_onehot[np.arange(len(paths)), real_labels, :,:] = np.ones((self.img_size,self.img_size)) 
 
         fake_labels_onehot = np.zeros((len(paths), 5, self.img_size, self.img_size))
-        fake_labels_onehot[np.arange(len(paths)), fake_labels, :,:] = np.ones((self.img_size,self.img_size)) 
-        # stacked = np.concatenate((imgs, onehot), axis = 3) 
+        fake_labels_onehot[np.arange(len(paths)), fake_labels, :,:] = np.ones((self.img_size,self.img_size))  
         self.pointer += 1
         return imgs, real_labels_onehot, fake_labels_onehot, train_label_pairs, paths
 
