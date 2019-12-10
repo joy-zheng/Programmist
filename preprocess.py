@@ -52,7 +52,7 @@ class Data_Processor:
             :return: arrays  of rgb images and paths
         """ 
         n = self.batch_size*self.pointer #start of the batch
-
+        print(len(os.listdir(self.image_dir)))
         paths = os.listdir(self.image_dir)[n:n+self.batch_size]
         imgs = np.ndarray([len(paths), 3, self.img_size, self.img_size])
         for i in range(len(paths)):
@@ -89,13 +89,4 @@ class Data_Processor:
             fake_label = (true_label+rand)%n
             label_pairs[i,1] = fake_label 
         return label_pairs
- 
-    
-p =  Data_Processor()
-batch = p.get_next_batch_image()[0]
-print(batch.shape)
-print(p.pointer)
-print("TWO")
-batch = p.get_next_batch_image()[0]
-print(batch.shape)
-print(p.pointer)
+   
