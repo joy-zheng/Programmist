@@ -63,15 +63,15 @@ class Generator_Model(nn.Module):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
-        print("Conv 1 Shape:", x.shape)
+        # print("Conv 1 Shape:", x.shape)
         x = self.conv2(x)
         x = self.bn2(x)
         x = self.relu(x)
-        print("Conv 2 Shape:", x.shape)
+        # print("Conv 2 Shape:", x.shape)
         x = self.conv3(x)
         x = self.bn3(x)
         x = self.relu(x)
-        print("Conv 3 Shape:", x.shape)
+        # print("Conv 3 Shape:", x.shape)
 
         # residual blocks x6 (as mentioned in section 3.3 of paper)
         x = self.res_block1(x)
@@ -84,15 +84,15 @@ class Generator_Model(nn.Module):
         x = self.deconv1(x)
         x = self.bn4(x)
         x = self.relu(x)
-        print("Deconv 1 Shape:", x.shape)
+        # print("Deconv 1 Shape:", x.shape)
         x = self.deconv2(x)
         x = self.bn5(x)
         x = self.relu(x)
-        print("Deconv 2 Shape:", x.shape)
+        # print("Deconv 2 Shape:", x.shape)
         
         x = self.conv4(x)
         x = self.tanh(x)
-        print("Generator output is ", x.shape)
+        # print("Generator output is ", x.shape)
         return x
 
     def loss_function(self, real_img, fake_img, fake_age):
@@ -104,11 +104,12 @@ class Generator_Model(nn.Module):
         # TODO: Calculate the loss
         # fake_img = self.call(real_img, target_ae_group)
         generator_loss = (1 / 2 * torch.mean((fake_img - 1).pow(2)))
-        print('age label shape', fake_age.shape)
+        # print('age label shape', fake_age.shape)
         age_loss = self.calculate_age_loss(fake_img, fake_age) 
         
         identity_loss = self.identity_preserving_module(real_img, fake_img)
         weighted_loss = self.generator_weight * generator_loss + self.age_weight * age_loss + self.identity_weight * identity_loss
+        print("Generator loss:", weighted_loss)
         return weighted_loss
     
     def calculate_age_loss(self, fake_img, fake_age_labels):
@@ -116,7 +117,7 @@ class Generator_Model(nn.Module):
         Calculate age loss for generator
         :param batched_real_img: a batch of training images, shape=[batch_size, img_height, img_width, num_channel]
         :param target_age_grouup: a list of target age groups, shape=[batch_size,num_age_group]
-        :return a float loss for the batch
+        :return a flqoat loss for the batch
         """
         fake_age_logits = self.classify_age_alexnet(fake_img)
         age_loss = self.softmax_cross_entropy_loss(fake_age_logits, fake_age_labels)
@@ -131,16 +132,14 @@ class Generator_Model(nn.Module):
         :return fake_age, shape=[batch_size]
         """
         # https://pytorch.org/hub/pytorch_vision_alexnet/ for reference
-        print('in', fake_img.shape)
+        # print('in', fake_img.shape)
         # TODO fake_img = fake_img.permute()
         num_age_group = 5
         alexnet = models.alexnet(pretrained=True)
         alexnet.classifier[6] = nn.Linear(in_features=4096, out_features=num_age_group)
         alexnet.eval()
         prepare = transforms.Compose([
-            # transforms.Resize(256),
-            # transforms.CenterCrop(224),
-            # transforms.ToTensor(),
+
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
         img_stack = []
@@ -165,9 +164,7 @@ class Generator_Model(nn.Module):
         # labels = labels.astype(np.float32)
         labels = torch.Tensor(labels).long()
         # print('lables',labels.shape)
-        print('label sample', labels[0])
-        print('logits', logits.shape)
-        print('logit sample', logits[0])
+
         output = loss(logits, labels)
         return torch.mean(output)
 
@@ -181,22 +178,26 @@ class Generator_Model(nn.Module):
         original_features = self.alex_features(org_image)
         generated_features = self.alex_features(generated_image)
         identity_loss =  0
-        for i in len(original_features):
-            sq_diff = np.square(abs(original_features[i] - generated_features[i]))
-            identity_loss +=  sq_diff        
+        for i in range(len(original_features)):
+            identity_loss += torch.mean((abs(original_features[i] - generated_features[i])).pow(2)   )
+            
         return identity_loss
 
     def alex_features (self, input_image):
         # input_image = Image.open('bunny.jpg')
         alexnet_model = models.alexnet(pretrained=True)
         process = transforms.Compose([
-            transforms.Resize(256),
-            # transforms.CenterCrop(224),
-            # transforms.ToTensor(),
+            # transforms.Resize(256),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
-        input_tensor = process(input_image)
-        input_batch = input_tensor.unsqueeze(0)
-        with torch.no_grad():
-            output = alexnet_model(input_batch)
+        # input_tensor = process(input_image)
+        # input_batch = input_tensor.unsqueeze(0)
+        # with torch.no_grad():
+        #     output = alexnet_model(input_batch)
+        img_stack = []
+        for img in input_image:
+            sample = process(img)
+            img_stack.append(sample)
+        prepared_img = torch.stack(img_stack)
+        output = alexnet_model(prepared_img)
         return output

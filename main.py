@@ -104,14 +104,14 @@ def train(generator, discriminator):
         #real img, real label
         d_real_logit = discriminator(batch, batch_real_labels)
 
-        g_loss = generator.loss_function(batch, g_output, batch_real_labels)
+        g_loss = generator.loss_function(batch, g_output, labels[:,0])
         d_loss = discriminator.loss_function(d_real_logit, d_fake1_logit, d_fake2_logit)
         
         generator.optimizer.zero_grad()
-        g_loss.backward()
+        g_loss.backward(retain_graph=True)
         generator.optimizer.step()
         discriminator.optimizer.zero_grad() 
-        d_loss.backward()
+        d_loss.backward(retain_graph=True)
         discriminator.optimizer.step()
 
         if i % 500 == 0:

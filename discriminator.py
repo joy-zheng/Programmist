@@ -60,4 +60,5 @@ class Discriminator_Model(nn.Module):
         d_loss_fake1 = torch.mean(torch.pow(disc_fake1_output, 2))
         d_loss_fake2 = torch.mean(torch.pow(disc_fake2_output, 2))
         loss = (1. / 2 * (d_loss_real + 1. / 2 * (d_loss_fake1 + d_loss_fake2)))
+        print("Discriminator loss:", loss)
         return loss
