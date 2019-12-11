@@ -9,4 +9,5 @@ dependencies:
     - scipy=1.2.1
     - torchvision
     - dgl
+    - cv2
     - scikit-image=0.16.2
