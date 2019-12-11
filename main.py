@@ -2,14 +2,13 @@ from preprocess import Data_Processor
 from generator import Generator_Model
 from discriminator import Discriminator_Model
 import numpy as np
-
-
 from imageio import imwrite
 import os
 import argparse
 import torch 
 from eval.fid import *
 from eval.inception import InceptionV3
+import cv2
 
 batch_size = 30
 image_size = 128
@@ -96,15 +95,15 @@ def train(generator, discriminator):
         
         # with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
         g_output = generator(batch, batch_real_labels)
-        
+
         #fake img, real label
         d_fake1_logit = discriminator(g_output,  batch_real_labels)
-                    #real img, fake label
+        #real img, fake label
         d_fake2_logit = discriminator(batch, batch_fake_labels)
         #real img, real label
         d_real_logit = discriminator(batch, batch_real_labels)
-
-        g_loss = generator.loss_function(batch, g_output, labels[:,0])
+ 
+        g_loss = generator.loss_function(batch, g_output, labels[:,0]) 
         d_loss = discriminator.loss_function(d_real_logit, d_fake1_logit, d_fake2_logit)
         
         generator.optimizer.zero_grad()
@@ -121,7 +120,15 @@ def train(generator, discriminator):
             current_fid = calculate_fid(batch_fid, gen_fid, use_multiprocessing = False, batch_size = batch_size)
             total_fid += current_fid 
             print('**** INCEPTION DISTANCE: %g ****' % current_fid) 
-
+        if i % 10 == 0:
+            cwd = os.getcwd() 
+            if not os.path.exists(cwd + '/results'):
+                os.mkdir(cwd + '/results')
+            img =  np.moveaxis(np.asarray(g_output.detach()), 1, 3)
+            img = img[0]
+            cv2.imwrite(cwd + "/results/res0_%d.jpg" %i, img)
+            img = img[1]
+            cv2.imwrite(cwd + "/results/res1_%d.jpg" %i, img)
         # g_gradients = g_tape.gradient(g_loss,  generator.trainable_variables)
         # generator.optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))        
         # d_gradients = d_tape.gradient(d_loss,  discriminator.trainable_variables)
