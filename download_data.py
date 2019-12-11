@@ -65,5 +65,5 @@ if __name__ == '__main__':
     prepare_data_dir()
     download_celeb_meta('./data')
     download_face_images('./data')
-    tf = tarfile.open("CACD2000.tar.gz")
+    tf = tarfile.open("./data/CACD2000.tar.gz")
     tf.extractall()
