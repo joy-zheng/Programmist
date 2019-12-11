@@ -12,7 +12,8 @@ import cv2
 import skimage
 from PIL import Image
 from torchvision import transforms
- 
+
+
 
 class Generator_Model(nn.Module):
     def __init__(self):
@@ -21,14 +22,15 @@ class Generator_Model(nn.Module):
         """
         super(Generator_Model, self).__init__()
         # TODO: Define the model, loss, and optimizer
+        self.iteration = 0
         
         # Initialize hyperparameters
         self.learning_rate = 5e-4
         self.batch_size = 10
         self.epochs = 15
-        self.generator_weight = 75 # TODO tweak it
-        self.age_weight = 30 # TODO tweak it
-        self.identity_weight = 0.5e-4 # TODO tweak it
+        self.generator_weight = 80 # TODO tweak it
+        self.age_weight = 25 # TODO tweak it
+        self.identity_weight = 5e-4 # TODO tweak it
     
         # Initialize layers
         self.conv1 = nn.Conv2d(8, 32, kernel_size=7, stride=1, padding=3)
@@ -92,7 +94,6 @@ class Generator_Model(nn.Module):
         
         x = self.conv4(x)
         x = self.tanh(x)
-        # print("Generator output is ", x.shape)
         return x
 
     def loss_function(self, real_img, fake_img, fake_age):
@@ -107,11 +108,13 @@ class Generator_Model(nn.Module):
         # print('age label shape', fake_age.shape)
         age_loss = self.calculate_age_loss(fake_img, fake_age) 
         identity_loss = self.identity_preserving_module(real_img, fake_img)
+        print('**** At iteration ', self.iteration)
         print('*** age_loss: ', age_loss)
         print('*** identity_loss: ', identity_loss)
         print('*** pure_generator_loss: ', generator_loss)
         weighted_loss = self.generator_weight * generator_loss + self.age_weight * age_loss + self.identity_weight * identity_loss
         print("Generator loss:", weighted_loss)
+        self.iteration += 1
         return weighted_loss
     
     def calculate_age_loss(self, fake_img, fake_age_labels):
