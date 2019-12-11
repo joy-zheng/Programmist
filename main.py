@@ -16,7 +16,7 @@ import cv2
 # n_images = 163446
 
 # Killing optional CPU driver warnings
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 gpu_available = torch.cuda.is_available()
 print("GPU Available: ", gpu_available)
@@ -202,8 +202,8 @@ def main():
     #                 # Save at the end of the epoch, too
     #                 print("**** SAVING CHECKPOINT AT END OF EPOCH ****")
     #                 manager.save()
-    #         if args.mode == 'test':
-    #             test(generator)
+    if args.mode == 'test':
+        test(generator, discriminator)
     # except RuntimeError as e:
     #     print(e)
 
