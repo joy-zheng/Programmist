@@ -5,9 +5,7 @@ from tqdm import tqdm
 import tarfile
 
 def download_file(destination):
-    URL = "http://www.umiacs.umd.edu/~sirius/CACD/celebrity2000_meta.mat"
-    # URL = "https://docs.google.com/uc?export=download"
-    # url = 'http://google.com/favicon.ico'
+    URL = "http://www.umiacs.umd.edu/~sirius/CACD/celebrity2000_meta.mat" 
     response = requests.get(URL, allow_redirects=True)
 
     session = requests.Session()
