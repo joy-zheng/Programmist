@@ -31,7 +31,6 @@ rm Miniconda3-latest-Linux-x86_64.sh
 
 source .bashrc
 
-conda install scikit-learn pandas jupyter ipython
 ```
 
 #### Installation
