@@ -20,6 +20,6 @@ Face-aging is a new and exciting field in Deep Learning. With the rising popular
 
 #### Activate/Deactivate
 
-`conda activate hustl`
+`conda activate clsgan`
 
 `conda deactivate`
