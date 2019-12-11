@@ -13,7 +13,7 @@ import cv2
 # batch_size = 30
 # image_size = 128
 # z_dim = 500
-n_images = 163446
+# n_images = 163446
 
 # Killing optional CPU driver warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -91,7 +91,7 @@ def train(generator, discriminator):
     data_processor = Data_Processor(batch_size = args.batch_size, image_size = args.image_size, mode='train')
     target_agegroup = None
     total_fid = 0
-    train_size = int(n_images*0.9)
+    train_size = int(args.n_images*0.9)
     for i in range (int(train_size/args.batch_size)):
     # for iteration, batch in enumerate(dataset_iterator):
         batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
