@@ -12,15 +12,15 @@ Face-aging is a new and exciting field in Deep Learning. With the rising popular
 
 #### Setup conda
 
-`wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh'
+`wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 
-`bash Miniconda3-latest-Linux-x86_64.sh'
+bash Miniconda3-latest-Linux-x86_64.sh
 
-`rm Miniconda3-latest-Linux-x86_64.sh'
+rm Miniconda3-latest-Linux-x86_64.sh
 
-`source .bashrc'
+source .bashrc
 
-`conda install scikit-learn pandas jupyter ipython'
+conda install scikit-learn pandas jupyter ipython'
 
 #### Installation
 
