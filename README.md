@@ -7,3 +7,19 @@ Face-aging is a new and exciting field in Deep Learning. With the rising popular
  
 ## How to Train (Cross-Age Celebrity Dataset)
 1. Run `python download_data.py` to download the the [Cross-Age Celebrity Dataset metadata](http://www.umiacs.umd.edu/~sirius/CACD/celebrity2000_meta.mat)(817K) and [Face images](https://drive.google.com/file/d/0B3zF40otoXI3OTR0Y0MtNnVhNFU/)(3.5G). These will be downloaded and unzipped in the `data\` directory. 
+
+## Environment
+
+#### Installation
+
+`conda env create -f environment_ARCH.yml`
+
+#### Update
+
+`conda env update -f environment_ARCH.yml`
+
+#### Activate/Deactivate
+
+`conda activate hustl`
+
+`conda deactivate`
