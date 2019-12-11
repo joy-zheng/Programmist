@@ -98,6 +98,4 @@ class Data_Processor:
             fake_label = (true_label+rand)%n
             label_pairs[i,1] = fake_label 
         return label_pairs
-   
-p = Data_Processor()
-p.get_next_batch_image()
+    
