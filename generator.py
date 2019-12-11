@@ -26,9 +26,9 @@ class Generator_Model(nn.Module):
         self.learning_rate = 5e-4
         self.batch_size = 10
         self.epochs = 15
-        self.generator_weight = 0.4
-        self.age_weight = 0.3
-        self.identity_weight = 0.3
+        self.generator_weight = 75 # TODO tweak it
+        self.age_weight = 30 # TODO tweak it
+        self.identity_weight = 0.5e-4 # TODO tweak it
     
         # Initialize layers
         self.conv1 = nn.Conv2d(8, 32, kernel_size=7, stride=1, padding=3)
@@ -106,8 +106,10 @@ class Generator_Model(nn.Module):
         generator_loss = (1 / 2 * torch.mean((fake_img - 1).pow(2)))
         # print('age label shape', fake_age.shape)
         age_loss = self.calculate_age_loss(fake_img, fake_age) 
-        
         identity_loss = self.identity_preserving_module(real_img, fake_img)
+        print('*** age_loss: ', age_loss)
+        print('*** identity_loss: ', identity_loss)
+        print('*** pure_generator_loss: ', generator_loss)
         weighted_loss = self.generator_weight * generator_loss + self.age_weight * age_loss + self.identity_weight * identity_loss
         print("Generator loss:", weighted_loss)
         return weighted_loss
@@ -177,15 +179,33 @@ class Generator_Model(nn.Module):
         """
         original_features = self.alex_features(org_image)
         generated_features = self.alex_features(generated_image)
-        identity_loss =  0
-        for i in range(len(original_features)):
-            identity_loss += torch.mean((abs(original_features[i] - generated_features[i])).pow(2)   )
-            
+        # identity_loss =  0
+        # for i in range(len(original_features)):
+        #     identity_loss += torch.mean((abs(original_features[i] - generated_features[i])).pow(2)   )
+        identity_loss = torch.nn.functional.mse_loss(original_features, generated_features)
         return identity_loss
 
     def alex_features (self, input_image):
-        # input_image = Image.open('bunny.jpg')
+        # print('*** identity alexnet input image: ', input_image.shape)
         alexnet_model = models.alexnet(pretrained=True)
+        for param in alexnet_model.parameters():
+            param.requires_grad = False
+        alexnet_model.features = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(64, 192, kernel_size=5, padding=2),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(192, 384, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(384, 256, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, kernel_size=3, padding=1)
+        )
+        # set_parameter_requires_grad(alexnet_model, True)
+        # num_ftrs = alexnet_model.classifier[6].in_features
+        # alexnet_model.classifier[6] = nn.Linear(num_ftrs,5)
         process = transforms.Compose([
             # transforms.Resize(256),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -199,5 +219,6 @@ class Generator_Model(nn.Module):
             sample = process(img)
             img_stack.append(sample)
         prepared_img = torch.stack(img_stack)
-        output = alexnet_model(prepared_img)
+        output = alexnet_model.features(prepared_img)
+        # print('*** identity alexnet output features:', output.shape)
         return output
