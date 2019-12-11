@@ -10,6 +10,16 @@ Face-aging is a new and exciting field in Deep Learning. With the rising popular
 
 ## Environment
 
+#### Navigating GCP
+
+```
+python
+from zipfile import ZipFile
+zip_file = ZipFile('path_to_file/t.zip', 'r')
+zip_file.extractall('path_to_extract_folder')
+
+```
+
 #### Setup conda
 
 ```
