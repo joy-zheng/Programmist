@@ -11,9 +11,9 @@ class Data_Processor:
         self.image_size  = image_size 
         self.batch_size = batch_size
         self.age_groups = [range(11, 21), range(21, 31), range(31, 41),range(41, 51), range(51, 151)]
-        self.train_pointer = 0
-        self.pointer = 0
+        self.train_pointer = 0 
         self.test_pointer = 0
+        self.mode = mode
 
     def get_batch_metadata(self):
         """
@@ -59,9 +59,13 @@ class Data_Processor:
 
             :return: arrays  of rgb images and paths
         """ 
-        n = self.batch_size*self.pointer #start of the batch 
-
         ages_path = self.get_batch_metadata()[2]
+        dataset_size = len(ages_path) 
+        if self.mode == 'train':
+            n = self.batch_size*self.train_pointer 
+        if self.mode == 'test':
+            n = self.batch_size*self.test_pointer + int(dataset_size*0.9)  
+
         paths  = ages_path[n:n+self.batch_size,0] 
         imgs = np.ndarray([len(paths), 3, self.image_size, self.image_size])
         for i in range(len(paths)):
@@ -78,7 +82,10 @@ class Data_Processor:
         real_labels_onehot[np.arange(len(paths)), real_labels, :,:] = np.ones((self.image_size,self.image_size)) 
         fake_labels_onehot = np.zeros((len(paths), 5, self.image_size, self.image_size))
         fake_labels_onehot[np.arange(len(paths)), fake_labels, :,:] = np.ones((self.image_size,self.image_size))  
-        self.pointer += 1 
+        if self.mode == 'train':
+            self.train_pointer += 1  
+        if self.mode == 'test':
+            self.test_pointer += 1 
         return imgs, real_labels_onehot, fake_labels_onehot, train_label_pairs, paths
 
     def get_fakelabels(self, true_labels):
@@ -92,3 +99,5 @@ class Data_Processor:
             label_pairs[i,1] = fake_label 
         return label_pairs
    
+p = Data_Processor()
+p.get_next_batch_image()
