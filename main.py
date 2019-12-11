@@ -85,8 +85,8 @@ def train(generator, discriminator):
     data_processor = Data_Processor(batch_size = batch_size, image_size = image_size, mode='train')
     target_agegroup = None
     total_fid = 0
-
-    for i in range (int(n_images/batch_size)):
+    train_size = int(n_images*0.9)
+    for i in range (int(train_size/batch_size)):
     # for iteration, batch in enumerate(dataset_iterator):
         batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
         batch = torch.tensor(batch).float()
@@ -126,6 +126,7 @@ def train(generator, discriminator):
                 os.mkdir(cwd + '/results')
             img =  np.moveaxis(np.asarray(g_output.detach()), 1, 3)
             results = img[0:5]
+            print(results.shape)
             for k in range (5):
                 cv2.imwrite(cwd + "/results/res_%d.jpg" %(i*5+k), results[k])
         # g_gradients = g_tape.gradient(g_loss,  generator.trainable_variables)
@@ -145,7 +146,7 @@ def train(generator, discriminator):
 #     return calculate_frechet_distance(mr, sr, mf, sf)
 
 # Test the model by generating some samples.
-def test(generator):
+def test(generator, discriminator):
     """
     Test the model.
 
@@ -154,10 +155,17 @@ def test(generator):
     :return: None
     """
     # TODO: Replace 'None' with code to sample a batch of random images
+    data_processor = Data_Processor(batch_size = batch_size, image_size = image_size, mode='test')
+    test_size = int(n_images*0.1)
+    for i in range (int(test_size/batch_size)):
+        batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
+        batch = torch.tensor(batch).float()
+        batch_real_labels = torch.tensor(batch_real_labels).float()
+        batch_fake_labels = torch.tensor(batch_fake_labels).float()
+
+
     img = np.random.uniform([args.batch_size, args.z_dim], -1, 1)
     img = generator(img)
-    
-
     ### Below, we've already provided code to save these generated images to files on disk
     # Rescale the image from (-1, 1) to (0, 255)
     img = ((img / 2) - 0.5) * 255
@@ -168,7 +176,7 @@ def test(generator):
         img_i = img[i]
         s = args.out_dir+'/'+str(i)+'.png'
         imwrite(s, img_i)
-
+    return None
 ## --------------------------------------------------------------------------------------
 
 def main():
