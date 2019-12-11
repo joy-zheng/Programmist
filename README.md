@@ -10,6 +10,10 @@ Face-aging is a new and exciting field in Deep Learning. With the rising popular
 
 ## Environment
 
+#### Setup conda
+
+'https://medium.com/google-cloud/set-up-anaconda-under-google-cloud-vm-on-windows-f71fc1064bd7'
+
 #### Installation
 
 `conda env create -f environment_gpu.yml`
