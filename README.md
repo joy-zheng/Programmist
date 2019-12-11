@@ -12,11 +12,11 @@ Face-aging is a new and exciting field in Deep Learning. With the rising popular
 
 #### Installation
 
-`conda env create -f environment_ARCH.yml`
+`conda env create -f environment_gpu.yml`
 
 #### Update
 
-`conda env update -f environment_ARCH.yml`
+`conda env update -f environment_gpu.yml`
 
 #### Activate/Deactivate
 
