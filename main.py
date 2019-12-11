@@ -27,7 +27,7 @@ parser = argparse.ArgumentParser(description='IPCGAN')
 parser.add_argument('--img-dir', type=str, default='./data/celebA',
                     help='Data where training images live')
 
-parser.add_argument('--out-dir', type=str, default='./output',
+parser.add_argument('--out-dir', type=str, default='./results',
                     help='Data where sampled output images will be written')
 
 parser.add_argument('--mode', type=str, default='train',
@@ -124,11 +124,12 @@ def train(generator, discriminator):
             cwd = os.getcwd() 
             if not os.path.exists(cwd + '/results'):
                 os.mkdir(cwd + '/results')
-            img =  np.moveaxis(np.asarray(g_output.detach()), 1, 3)
-            results = img[0:5]
-            print(results.shape)
-            for k in range (5):
-                cv2.imwrite(cwd + "/results/res_%d.jpg" %(i*5+k), results[k])
+            imgs =  np.moveaxis(np.asarray(g_output.detach()), 1, 3)[0:5]
+            for k in range (5): 
+                img = imgs[k]
+                img = ((img / 2) - 0.5) * 255
+                img = img.astype(np.uint8) 
+                cv2.imwrite(args.out_dir + "/res_%d.jpg" %(i+k), img) 
         # g_gradients = g_tape.gradient(g_loss,  generator.trainable_variables)
         # generator.optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))        
         # d_gradients = d_tape.gradient(d_loss,  discriminator.trainable_variables)
