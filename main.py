@@ -128,9 +128,6 @@ def train(generator, discriminator):
             results = img[0:5]
             for k in range (5):
                 cv2.imwrite(cwd + "/results/res_%d.jpg" %(i*5+k), results[k])
-            # cv2.imwrite(cwd + "/results/res0_%d.jpg" %i, img)
-            # img = img[1]
-            # cv2.imwrite(cwd + "/results/res1_%d.jpg" %i, img)
         # g_gradients = g_tape.gradient(g_loss,  generator.trainable_variables)
         # generator.optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))        
         # d_gradients = d_tape.gradient(d_loss,  discriminator.trainable_variables)
