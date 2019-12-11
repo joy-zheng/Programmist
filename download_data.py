@@ -9,14 +9,7 @@ def download_file(destination):
     response = requests.get(URL, allow_redirects=True)
 
     session = requests.Session()
-
-    # response = session.get(URL, params={ 'id': id }, stream=True)
-    # token = get_confirm_token(response)
-
-    # if token:
-    # params = { 'id' : id, 'confirm' : token }
-    # response = session.get(URL, params=params, stream=True)
-
+ 
     save_response_content(response, destination)
 
 def get_confirm_token(response):
