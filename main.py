@@ -120,10 +120,7 @@ def train(generator, discriminator):
             current_fid = calculate_fid(batch_fid, gen_fid, use_multiprocessing = False, batch_size = batch_size)
             total_fid += current_fid 
             print('**** INCEPTION DISTANCE: %g ****' % current_fid) 
-        if i % 10 == 0:
-            cwd = os.getcwd() 
-            if not os.path.exists(cwd + '/results'):
-                os.mkdir(cwd + '/results')
+        if i % 10 == 0: 
             imgs =  np.moveaxis(np.asarray(g_output.detach()), 1, 3)[0:5]
             for k in range (5): 
                 img = imgs[k]
