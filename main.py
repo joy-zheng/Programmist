@@ -154,23 +154,28 @@ def test(generator, discriminator):
     """
     # TODO: Replace 'None' with code to sample a batch of random images
     data_processor = Data_Processor(batch_size = batch_size, image_size = image_size, mode='test')
-    test_size = int(n_images*0.1)
-    for i in range (int(test_size/batch_size)):
-        batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
-        batch = torch.tensor(batch).float()
-        batch_real_labels = torch.tensor(batch_real_labels).float()
-        batch_fake_labels = torch.tensor(batch_fake_labels).float()
+    # test_size = int(n_images*0.1)
+    # for i in range (int(test_size/batch_size)):
+    batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
+    batch = torch.tensor(batch).float()
+    batch_real_labels = torch.tensor(batch_real_labels).float()
+    batch_fake_labels = torch.tensor(batch_fake_labels).float()
 
 
-    img = np.random.uniform([args.batch_size, args.z_dim], -1, 1)
-    img = generator(img)
+    # img = np.random.uniform([args.batch_size, args.z_dim], -1, 1)
+    img = generator(batch, batch_real_labels)
+    img =  np.moveaxis(np.asarray(img.detach()), 1, 3)
+    print(img.shape)
+    # cv2.imshow("result", img)
     ### Below, we've already provided code to save these generated images to files on disk
     # Rescale the image from (-1, 1) to (0, 255)
-    img = ((img / 2) - 0.5) * 255
+    # for i in range():
+    img[0] = ((img[0] / 2) - 0.5) * 255
     # Convert to uint8
     img = img.astype(np.uint8)
     # Save images to disk
     for i in range(0, args.batch_size):
+        # print(args.batch_size)
         img_i = img[i]
         s = args.out_dir+'/'+str(i)+'.png'
         imwrite(s, img_i)
