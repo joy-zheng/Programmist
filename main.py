@@ -42,7 +42,7 @@ parser.add_argument('--restore-checkpoint', action='store_true',
 parser.add_argument('--z-dim', type=int, default=100,
                     help='Dimensionality of the latent space')
 
-parser.add_argument('--batch-size', type=int, default=30,
+parser.add_argument('--batch-size', type=int, default=32,
                     help='Sizes of image batches fed through the network')
 
 parser.add_argument('--image-size', type=int, default=128,
@@ -145,14 +145,12 @@ def train(generator, discriminator):
         if i % 10 == 0: 
             imgs =  np.moveaxis(np.asarray(g_output.detach()), 1, 3)[0:5]
             for k in range (5):  
-                img = imgs[k]
-                cwd = os.getcwd() 
-                outdir = cwd + args.out_dir
+                outdir =  os.getcwd() + args.out_dir
                 if not os.path.exists(outdir):
                         os.mkdir(outdir)
+                img = imgs[k] 
                 img = ((img / 2) + 0.5) * 255
-                img = img.astype(np.uint8) 
-                imwrite(outdir + '/res0_%d.jpg' %(i+k), img) 
+                imwrite(outdir + '/res0_%d.jpg' %(i+k), img.astype(np.uint8) ) 
                 # g_gradients = g_tape.gradient(g_loss,  generator.trainable_variables)
         # generator.optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))        
         # d_gradients = d_tape.gradient(d_loss,  discriminator.trainable_variables)
