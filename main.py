@@ -27,7 +27,7 @@ parser = argparse.ArgumentParser(description='IPCGAN')
 parser.add_argument('--img-dir', type=str, default='./data/celebA',
                     help='Data where training images live')
 
-parser.add_argument('--out-dir', type=str, default='results',
+parser.add_argument('--out-dir', type=str, default='/results',
                     help='Data where sampled output images will be written')
 
 parser.add_argument('--mode', type=str, default='train',
@@ -145,11 +145,9 @@ def train(generator, discriminator):
         if i % 10 == 0: 
             imgs =  np.moveaxis(np.asarray(g_output.detach()), 1, 3)[0:5]
             for k in range (5):  
-                print("SAVING")
                 img = imgs[k]
                 cwd = os.getcwd() 
-                outdir = cwd + '/' + args.out_dir
-                print(outdir)
+                outdir = cwd + args.out_dir
                 if not os.path.exists(outdir):
                         os.mkdir(outdir)
                 img = ((img / 2) + 0.5) * 255
@@ -203,7 +201,7 @@ def test(generator, discriminator):
         for k in range (5):  
             img_i = img[k]
             cwd = os.getcwd() 
-            outdir = cwd + '/' + args.out_dir
+            outdir = cwd + args.out_dir
             if not os.path.exists(outdir):
                     os.mkdir(outdir)
             img = ((img / 2) + 0.5) * 255
