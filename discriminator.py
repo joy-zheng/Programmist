@@ -13,7 +13,7 @@ class Discriminator_Model(nn.Module):
         The model for the discriminator network is defined here.
         """
 
-        self.learning_rate = 5e-4
+        self.learning_rate = 0.0005
 
         self.leakyrelu = nn.LeakyReLU(0.2)
         self.conv1 = nn.Conv2d(3, 64, kernel_size=4, stride=2, padding=(1,1))
@@ -24,8 +24,10 @@ class Discriminator_Model(nn.Module):
         self.conv4 = nn.Conv2d(256, 512, kernel_size=4, stride=2)
         self.batchnorm4 = nn.BatchNorm2d(512, eps=0.001, track_running_stats=True)
         self.conv5 = nn.Conv2d(512, 512, kernel_size=4, stride=2)
-        self.optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate)
-        
+        self.beta1 = 0.5
+        self.beta2 = 0.99
+        self.optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate, betas=(self.beta1, self.beta2))
+        self.mse = nn.MSELoss()
 
 
 
@@ -59,6 +61,7 @@ class Discriminator_Model(nn.Module):
         d_loss_real = torch.mean(torch.pow((disc_real_output - 1.), 2))
         d_loss_fake1 = torch.mean(torch.pow(disc_fake1_output, 2))
         d_loss_fake2 = torch.mean(torch.pow(disc_fake2_output, 2))
-        loss = (1. / 2 * (d_loss_real + 1. / 2 * (d_loss_fake1 + d_loss_fake2)))
+        loss = 1./2* (d_loss_real + 1./2*(d_loss_fake1 + d_loss_fake2))
+
         print("Discriminator loss:", loss)
         return loss
