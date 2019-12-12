@@ -150,7 +150,7 @@ def train(generator, discriminator):
                         os.mkdir(outdir)
                 img = imgs[k] 
                 img = ((img / 2) + 0.5) * 255
-                imwrite(outdir + '/res0_%d.jpg' %(i+k), img.astype(np.uint8) ) 
+                imwrite(outdir + '/res_%d.jpg' %(i+k), img.astype(np.uint8) ) 
                 # g_gradients = g_tape.gradient(g_loss,  generator.trainable_variables)
         # generator.optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))        
         # d_gradients = d_tape.gradient(d_loss,  discriminator.trainable_variables)
