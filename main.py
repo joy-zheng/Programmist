@@ -87,7 +87,9 @@ def train(generator, discriminator):
 
     :return: The average FID score over the epoch
     """
-    # Loop over our data until we run out 
+    # Loop over our data until we run out
+    d_losses  = []
+    g_losses  = [] 
     data_processor = Data_Processor(batch_size = args.batch_size, image_size = args.image_size, mode='train')
     target_agegroup = None
     total_fid = 0
@@ -112,6 +114,9 @@ def train(generator, discriminator):
         g_loss = generator.loss_function(batch, g_output, labels[:,0]) 
         d_loss = discriminator.loss_function(d_real_logit, d_fake1_logit, d_fake2_logit)
         
+        g_losses.append(g_loss)
+        d_losses.append(d_loss)
+
         generator.optimizer.zero_grad()
         g_loss.backward(retain_graph=True)
         generator.optimizer.step()
@@ -138,7 +143,7 @@ def train(generator, discriminator):
         # d_gradients = d_tape.gradient(d_loss,  discriminator.trainable_variables)
         # discriminator.optimizer.apply_gradients(zip(d_gradients, discriminator.trainable_variables))
     avg_fid = total_fid/i
-    return avg_fid
+    return avg_fid, g_losses, d_losses
 
 # def fid_function(real_images, generated_images, dims=2048, cuda = gpu_available):
 #     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
@@ -178,9 +183,12 @@ def test(generator, discriminator):
     img = img.astype(np.uint8)
     # Save images to disk
     for i in range(0, args.batch_size):
+        cwd = os.getcwd() 
+        outdir = cwd + '/' + args.out_dir
+        if not os.path.exists(outdir):
+                os.mkdir(outdir)
         img_i = img[i]
-        s = args.out_dir+'/'+str(i)+'.png'
-        imwrite(s, img_i)
+        cv2.imwrite(outdir + '/res0_%d.jpg' %i, img) 
     return None
 ## --------------------------------------------------------------------------------------
 
@@ -189,7 +197,7 @@ def main():
     # Initialize generator and discriminator models
     generator = Generator_Model()
     discriminator = Discriminator_Model()
-    avg_fid = train(generator, discriminator)
+    avg_fid, g_losses, d_losses = train(generator, discriminator)
     print('========================== Average FID: %d  ==========================' % avg_fid)
     # try:
     #     # Specify an invalid GPU device
