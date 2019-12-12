@@ -167,7 +167,16 @@ def test(generator, discriminator):
     data_processor = Data_Processor(batch_size = args.batch_size, image_size = args.image_size, mode='test')
     # test_size = int(n_images*0.1)
     # for i in range (int(test_size/batch_size)):
+
     batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
+    # comment out to  look at  inputs
+    # for i  in range(10):
+    #     cwd = os.getcwd() 
+    #     outdir = cwd + '/' + "inputs"
+    #     if not os.path.exists(outdir):
+    #             os.mkdir(outdir)
+    #     img_i = batch[i]
+    #     imwrite(outdir + '/res0_%d.jpg' %i, img) 
     batch = torch.tensor(batch).float()
     batch_real_labels = torch.tensor(batch_real_labels).float()
     batch_fake_labels = torch.tensor(batch_fake_labels).float()
@@ -188,7 +197,7 @@ def test(generator, discriminator):
         if not os.path.exists(outdir):
                 os.mkdir(outdir)
         img_i = img[i]
-        imwrite(outdir + '/res0_%d.jpg' %i, img) 
+        imwrite(outdir + '/res0_%d.jpg' %i, img_i) 
     return None
 ## --------------------------------------------------------------------------------------
 
