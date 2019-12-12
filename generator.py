@@ -25,7 +25,7 @@ class Generator_Model(nn.Module):
         self.iteration = 0
         
         # Initialize hyperparameters
-        self.learning_rate = 5e-4
+        self.learning_rate = 0.0005
         self.batch_size = 10
         self.epochs = 15
         self.generator_weight = 80 # TODO tweak it
@@ -33,6 +33,7 @@ class Generator_Model(nn.Module):
         self.identity_weight = 5e-4 # TODO tweak it
     
         # Initialize layers
+        self.res_blocks=self.block(models.resnet.BasicBlock(128,128),6)
         self.conv1 = nn.Conv2d(8, 32, kernel_size=7, stride=1, padding=3)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1)
         self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1)
@@ -42,10 +43,12 @@ class Generator_Model(nn.Module):
         self.bn3 = nn.BatchNorm2d(128, eps=0.001)
         self.bn4 = nn.BatchNorm2d(64, eps=0.001)
         self.bn5 = nn.BatchNorm2d(32, eps=0.001)
-        self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2)
-        self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2)
-        self.conv4 = nn.Conv2d(32, 3, kernel_size=7, stride=1)
-        self.optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate)
+        self.deconv1 = nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=1)
+        self.deconv2 = nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=0, output_padding=1)
+        self.conv4 = nn.Conv2d(32, 3, kernel_size=7, stride=1, padding=3)
+        self.beta1 = 0.5
+        self.beta2 = 0.99
+        self.optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate, betas=(self.beta1, self.beta2))
         self.tanh = nn.Tanh()
         self.res_block1 = models.resnet.BasicBlock(128, 128)
         self.res_block2 = models.resnet.BasicBlock(128, 128)
@@ -53,6 +56,12 @@ class Generator_Model(nn.Module):
         self.res_block4 = models.resnet.BasicBlock(128, 128)
         self.res_block5 = models.resnet.BasicBlock(128, 128)
         self.res_block6 = models.resnet.BasicBlock(128, 128)
+
+    def block(self,block,repeat_times):
+        layers=[]
+        for i in range(repeat_times):
+            layers.append(block)
+        return nn.Sequential(*layers)
 
     def forward(self, inputs, labels):
         """
@@ -76,12 +85,13 @@ class Generator_Model(nn.Module):
         # print("Conv 3 Shape:", x.shape)
 
         # residual blocks x6 (as mentioned in section 3.3 of paper)
-        x = self.res_block1(x)
-        x = self.res_block2(x)
-        x = self.res_block3(x)
-        x = self.res_block4(x)
-        x = self.res_block5(x)
-        x = self.res_block6(x)
+        # x = self.res_block1(x)
+        # x = self.res_block2(x)
+        # x = self.res_block3(x)
+        # x = self.res_block4(x)
+        # x = self.res_block5(x)
+        # x = self.res_block6(x)
+        x = self.res_blocks(x)
 
         x = self.deconv1(x)
         x = self.bn4(x)
@@ -106,16 +116,16 @@ class Generator_Model(nn.Module):
         # fake_img = self.call(real_img, target_ae_group)
         generator_loss = (1 / 2 * torch.mean((fake_img - 1).pow(2)))
         # print('age label shape', fake_age.shape)
-        age_loss = self.calculate_age_loss(fake_img, fake_age) 
-        identity_loss = self.identity_preserving_module(real_img, fake_img)
-        print('**** At iteration ', self.iteration)
-        print('*** age_loss: ', age_loss)
-        print('*** identity_loss: ', identity_loss)
+        # age_loss = self.calculate_age_loss(fake_img, fake_age) 
+        # identity_loss = self.identity_preserving_module(real_img, fake_img)
+        # print('**** At iteration ', self.iteration)
+        # print('*** age_loss: ', age_loss)
+        # print('*** identity_loss: ', identity_loss)
         print('*** pure_generator_loss: ', generator_loss)
-        weighted_loss = self.generator_weight * generator_loss + self.age_weight * age_loss + self.identity_weight * identity_loss
-        print("Generator loss:", weighted_loss)
+        # weighted_loss = self.generator_weight * generator_loss + self.age_weight * age_loss + self.identity_weight * identity_loss
+        # print("Generator loss:", weighted_loss)
         self.iteration += 1
-        return weighted_loss
+        return generator_loss
     
     def calculate_age_loss(self, fake_img, fake_age_labels):
         """
