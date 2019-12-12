@@ -188,7 +188,7 @@ def test(generator, discriminator):
         if not os.path.exists(outdir):
                 os.mkdir(outdir)
         img_i = img[i]
-        cv2.imwrite(outdir + '/res0_%d.jpg' %i, img) 
+        imwrite(outdir + '/res0_%d.jpg' %i, img) 
     return None
 ## --------------------------------------------------------------------------------------
 
