@@ -67,14 +67,16 @@ class Data_Processor:
             n = self.batch_size*self.test_pointer + int(dataset_size*0.9)  
 
         paths  = ages_path[n:n+self.batch_size,0] 
-        imgs = np.ndarray([len(paths), 3, self.image_size, self.image_size])
+        imgs = np.ndarray([len(paths), 3, self.image_size, self.image_size], dtype= np.uint8)
         for i in range(len(paths)):
             img = cv2.imread(os.path.join(self.image_dir, paths[i]))
-            if len(np.asarray(img).shape) > 0 : 
+            if len(np.asarray(img).shape) > 0 :  
                 img = cv2.resize(img, (self.image_size, self.image_size))
-                img = img.astype(np.float32) 
-                img =  np.moveaxis(img, -1, 0) #swap axes
-                imgs[i] = img   
+                # img = img.astype(np.float32) 
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                img =  np.moveaxis(img, -1, 0) #swap axes 
+                img = (img - img.mean())/img.std()
+                imgs[i] = img  
         real_labels = np.asarray(ages_path[n:n+self.batch_size,1], dtype = int) 
         train_label_pairs = self.get_fakelabels(real_labels)
         fake_labels =  train_label_pairs[:,1]

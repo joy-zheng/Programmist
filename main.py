@@ -27,7 +27,7 @@ parser = argparse.ArgumentParser(description='IPCGAN')
 parser.add_argument('--img-dir', type=str, default='./data/celebA',
                     help='Data where training images live')
 
-parser.add_argument('--out-dir', type=str, default='./results',
+parser.add_argument('--out-dir', type=str, default='results',
                     help='Data where sampled output images will be written')
 
 parser.add_argument('--mode', type=str, default='train',
@@ -42,7 +42,7 @@ parser.add_argument('--restore-checkpoint', action='store_true',
 parser.add_argument('--z-dim', type=int, default=100,
                     help='Dimensionality of the latent space')
 
-parser.add_argument('--batch-size', type=int, default=128,
+parser.add_argument('--batch-size', type=int, default=30,
                     help='Sizes of image batches fed through the network')
 
 parser.add_argument('--image-size', type=int, default=128,
@@ -97,6 +97,17 @@ def train(generator, discriminator):
     for i in range (int(train_size/args.batch_size)):
     # for iteration, batch in enumerate(dataset_iterator):
         batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
+        
+        #view inputs
+        # for i  in range(10):
+        #     batch_m =  np.moveaxis(np.asarray(batch), 1, 3)
+        #     cwd = os.getcwd() 
+        #     print("saving")
+        #     outdir = cwd + '/' + "inputs"
+        #     if not os.path.exists(outdir):
+        #             os.mkdir(outdir)
+        #     imwrite(outdir + '/res0_%d.jpg' %i,  batch_m[i]) 
+
         batch = torch.tensor(batch).float()
         batch_real_labels = torch.tensor(batch_real_labels).float()
         batch_fake_labels = torch.tensor(batch_fake_labels).float()
@@ -133,12 +144,18 @@ def train(generator, discriminator):
             print('**** INCEPTION DISTANCE: %g ****' % current_fid) 
         if i % 10 == 0: 
             imgs =  np.moveaxis(np.asarray(g_output.detach()), 1, 3)[0:5]
-            for k in range (5): 
+            for k in range (5):  
+                print("SAVING")
                 img = imgs[k]
-                img = ((img / 2) - 0.5) * 255
+                cwd = os.getcwd() 
+                outdir = cwd + '/' + args.out_dir
+                print(outdir)
+                if not os.path.exists(outdir):
+                        os.mkdir(outdir)
+                img = ((img / 2) + 0.5) * 255
                 img = img.astype(np.uint8) 
-                cv2.imwrite(args.out_dir + "/res_%d.jpg" %(i+k), img) 
-        # g_gradients = g_tape.gradient(g_loss,  generator.trainable_variables)
+                imwrite(outdir + '/res0_%d.jpg' %(i+k), img) 
+                # g_gradients = g_tape.gradient(g_loss,  generator.trainable_variables)
         # generator.optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))        
         # d_gradients = d_tape.gradient(d_loss,  discriminator.trainable_variables)
         # discriminator.optimizer.apply_gradients(zip(d_gradients, discriminator.trainable_variables))
@@ -170,13 +187,7 @@ def test(generator, discriminator):
 
     batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
     # comment out to  look at  inputs
-    # for i  in range(10):
-    #     cwd = os.getcwd() 
-    #     outdir = cwd + '/' + "inputs"
-    #     if not os.path.exists(outdir):
-    #             os.mkdir(outdir)
-    #     img_i = batch[i]
-    #     imwrite(outdir + '/res0_%d.jpg' %i, img) 
+
     batch = torch.tensor(batch).float()
     batch_real_labels = torch.tensor(batch_real_labels).float()
     batch_fake_labels = torch.tensor(batch_fake_labels).float()
@@ -186,18 +197,18 @@ def test(generator, discriminator):
 
     ### Below, we've already provided code to save these generated images to files on disk
     # Rescale the image from (-1, 1) to (0, 255)
-
-    img[0] = ((img[0] / 2) - 0.5) * 255
-    # Convert to uint8
-    img = img.astype(np.uint8)
-    # Save images to disk
-    for i in range(0, args.batch_size):
-        cwd = os.getcwd() 
-        outdir = cwd + '/' + args.out_dir
-        if not os.path.exists(outdir):
-                os.mkdir(outdir)
-        img_i = img[i]
-        imwrite(outdir + '/res0_%d.jpg' %i, img_i) 
+ 
+    if i % 10 == 0: 
+        imgs =  np.moveaxis(np.asarray(g_output.detach()), 1, 3)[0:5]
+        for k in range (5):  
+            img_i = img[k]
+            cwd = os.getcwd() 
+            outdir = cwd + '/' + args.out_dir
+            if not os.path.exists(outdir):
+                    os.mkdir(outdir)
+            img = ((img / 2) + 0.5) * 255
+            img = img.astype(np.uint8) 
+            imwrite(outdir + '/res0_%d.jpg' %(i+k), img) 
     return None
 ## --------------------------------------------------------------------------------------
 
