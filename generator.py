@@ -71,17 +71,20 @@ class Generator_Model(nn.Module):
         """
         # TODO: Call the forward pass
         x = torch.cat((inputs, labels), 1)
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
+        # x = self.conv1(x)
+        # x = self.bn1(x)
+        # x = self.relu(x)
+        x = self.relu(self.bn1(self.conv1(x)))
+        x = self.relu(self.bn2(self.conv2(x)))
+        x = self.relu(self.bn3(self.conv3(x)))
         # print("Conv 1 Shape:", x.shape)
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.relu(x)
+        # x = self.conv2(x)
+        # x = self.bn2(x)
+        # x = self.relu(x)
         # print("Conv 2 Shape:", x.shape)
-        x = self.conv3(x)
-        x = self.bn3(x)
-        x = self.relu(x)
+        # x = self.conv3(x)
+        # x = self.bn3(x)
+        # x = self.relu(x)
         # print("Conv 3 Shape:", x.shape)
 
         # residual blocks x6 (as mentioned in section 3.3 of paper)
@@ -93,17 +96,19 @@ class Generator_Model(nn.Module):
         # x = self.res_block6(x)
         x = self.res_blocks(x)
 
-        x = self.deconv1(x)
-        x = self.bn4(x)
-        x = self.relu(x)
+        # x = self.deconv1(x)
+        # x = self.bn4(x)
+        # x = self.relu(x)
+        x = self.relu(self.bn4(self.deconv1(x)))
+        x = self.relu(self.bn5(self.deconv2(x)))
         # print("Deconv 1 Shape:", x.shape)
-        x = self.deconv2(x)
-        x = self.bn5(x)
-        x = self.relu(x)
+        # x = self.deconv2(x)
+        # x = self.bn5(x)
+        # x = self.relu(x)
         # print("Deconv 2 Shape:", x.shape)
         
-        x = self.conv4(x)
-        x = self.tanh(x)
+        x = self.tanh(self.conv4(x))
+        
         return x
 
     def loss_function(self, real_img, fake_img, fake_age):

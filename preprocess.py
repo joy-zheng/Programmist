@@ -74,7 +74,9 @@ class Data_Processor:
                 img = cv2.resize(img, (self.image_size, self.image_size))
                 img = img.astype(np.float32) 
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                img = (img - img.mean())/img.std()
+                # img = (img - img.mean())/img.std()
+                img = img/255.0
+
                 img =  np.moveaxis(img, -1, 0) #swap axes 
                 imgs[i] = img  
         real_labels = np.asarray(ages_path[n:n+self.batch_size,1], dtype = int) 
