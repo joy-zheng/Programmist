@@ -10,7 +10,7 @@ metadata_dir = 'data/celebrity2000_meta.mat'
 image_dir  = 'data/CACD2000' 
 age_groups = [range(11, 21), range(21, 31), range(31, 41),range(41, 51), range(51, 151)]
 
-def get_batch_metadata():
+def save_age_paths():
     """
     Gets the metadata from metadata directory and returns the metadata for both celebrities and images.
 
@@ -38,9 +38,6 @@ def get_batch_metadata():
     age_group_labels = np.reshape(age_group_labels, (len(age_group_labels), 1))
     ages_path = np.concatenate([paths, age_group_labels], axis = 1)   
     # np.random.shuffle(agesd_path) 
-    return  ages_path
-
-array = get_batch_metadata()
-
-with open('ages_paths.txt', 'w') as filehandle:
-    json.dump(array.tolist(), filehandle)
+    np.random.shuffle(ages_path)  
+    with open('ages_paths.txt', 'w') as filehandle:
+        json.dump(ages_path.tolist(), filehandle)

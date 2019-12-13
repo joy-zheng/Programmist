@@ -26,7 +26,6 @@ class Data_Processor:
             :return: arrays  of rgb images and paths
         """ 
         ages_path = np.array(json.loads(open("ages_paths.txt","r").read())) #load  from  json file.
-        np.random.shuffle(ages_path)  
         dataset_size = len(ages_path) 
         if self.mode == 'train':
             n = self.batch_size*self.train_pointer 

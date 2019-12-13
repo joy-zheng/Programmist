@@ -1,6 +1,7 @@
 from preprocess import Data_Processor
 from generator import Generator_Model
 from discriminator import Discriminator_Model
+from prep_age_labels import save_age_paths
 import numpy as np
 from imageio import imwrite
 import os
@@ -222,7 +223,8 @@ def main():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     generator = Generator_Model()
     discriminator = Discriminator_Model()
-    
+    save_age_paths() #creates a shuffled ages_paths.txt
+
     #Now send existing model to device.
     generator = generator.to(device)
     discriminator = discriminator.to(device)
