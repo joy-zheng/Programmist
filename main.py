@@ -96,6 +96,7 @@ def train(generator, discriminator, device):
     total_fid = 0
     train_size = int(args.n_images*0.9)
     for i in range (int(train_size/args.batch_size)):
+        # print(torch.cuda.memory_cached(device))
     # for iteration, batch in enumerate(dataset_iterator):
         batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
 
@@ -109,13 +110,14 @@ def train(generator, discriminator, device):
         #             os.mkdir(outdir)
         #     imwrite(outdir + '/res0_%d.jpg' %i,  batch_m[i]) 
 
-        batch = torch.tensor(batch).float()
-        batch_real_labels = torch.tensor(batch_real_labels).float()
-        batch_fake_labels = torch.tensor(batch_fake_labels).float()
-        batch = batch.to(device)
-        batch_real_labels = batch_real_labels.to(device)
-        batch_fake_labels = batch_fake_labels.to(device)
+        batch = torch.tensor(batch, device =device).float()
+        batch_real_labels = torch.tensor(batch_real_labels, device =device).float()
+        batch_fake_labels = torch.tensor(batch_fake_labels, device =device).float()
+        # batch = batch.to(device)
+        # batch_real_labels = batch_real_labels.to(device)
+        # batch_fake_labels = batch_fake_labels.to(device)
         
+        discriminator.optimizer.zero_grad() 
         # with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
         g_output = generator(batch, batch_real_labels)
 
@@ -126,37 +128,37 @@ def train(generator, discriminator, device):
         #real img, real label
         d_real_logit = discriminator(batch, batch_real_labels)
  
-        g_loss = generator.loss_function(batch, g_output, labels[:,0]) 
         d_loss = discriminator.loss_function(d_real_logit, d_fake1_logit, d_fake2_logit)
+        d_loss.backward()
+        discriminator.optimizer.step()
         
-        g_losses.append(g_loss)
-        d_losses.append(d_loss)
+        # g_losses.append(g_loss)
+        # d_losses.append(d_loss)
 
         generator.optimizer.zero_grad()
-        g_loss.backward(retain_graph=True)
+        g_output = generator(batch, batch_real_labels)
+        g_loss = generator.loss_function(batch, g_output, labels[:,0]) 
+        g_loss.backward()
         generator.optimizer.step()
-        discriminator.optimizer.zero_grad() 
-        d_loss.backward(retain_graph=True)
-        discriminator.optimizer.step()
 
-        if i % 500 == 0:
-            #make the axes match the original shape
-            batch_fid =  np.moveaxis(np.asarray(batch.cpu().detach()), 1, 3) #swap axes
-            gen_fid =  np.moveaxis(np.asarray(g_output.cpu().detach()), 1, 3) #swap axes
-            current_fid = calculate_fid(batch_fid, gen_fid, use_multiprocessing = False, batch_size = args.batch_size)
-            total_fid += current_fid 
-            print('**** INCEPTION DISTANCE: %g ****' % current_fid) 
-        if i % 10 == 0: 
-            imgs =  np.moveaxis(np.asarray(g_output.cpu().detach()), 1, 3)[0:5]
-            for k in range (5):  
-                outdir =  os.getcwd() + args.out_dir
-                if not os.path.exists(outdir):
-                        os.mkdir(outdir)
-                img = imgs[k] 
-                # img = ((img / 2) + 0.5) * 255
-                img = img*255
-                img = img.astype(np.uint8)
-                imwrite(outdir + '/res_%d.jpg' %(i+k), img.astype(np.uint8) ) 
+        # if i % 500 == 0:
+        #     #make the axes match the original shape
+        #     batch_fid =  np.moveaxis(np.asarray(batch.cpu().detach()), 1, 3) #swap axes
+        #     gen_fid =  np.moveaxis(np.asarray(g_output.cpu().detach()), 1, 3) #swap axes
+        #     current_fid = calculate_fid(batch_fid, gen_fid, use_multiprocessing = False, batch_size = args.batch_size)
+        #     total_fid += current_fid 
+        #     print('**** INCEPTION DISTANCE: %g ****' % current_fid) 
+        # if i % 10 == 0: 
+        #     imgs =  np.moveaxis(np.asarray(g_output.cpu().detach()), 1, 3)[0:5]
+        #     for k in range (5):  
+        #         outdir =  os.getcwd() + args.out_dir
+        #         if not os.path.exists(outdir):
+        #                 os.mkdir(outdir)
+        #         img = imgs[k] 
+        #         # img = ((img / 2) + 0.5) * 255
+        #         img = img*255
+        #         img = img.astype(np.uint8)
+        #         imwrite(outdir + '/res_%d.jpg' %(i+k), img.astype(np.uint8) ) 
                 # g_gradients = g_tape.gradient(g_loss,  generator.trainable_variables)
         # generator.optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))        
         # d_gradients = d_tape.gradient(d_loss,  discriminator.trainable_variables)
