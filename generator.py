@@ -108,7 +108,7 @@ class Generator_Model(nn.Module):
 
 
         # print('age label shape', fake_age.shape)
-        age_loss = self.calculate_age_loss(source_img, fake_age) 
+        age_loss = self.calculate_age_loss(source_img.cuda(), torch.tensor(fake_age).float().cuda()) 
         identity_loss = self.identity_preserving_module(source_img, generated_img)
         # print('**** At iteration ', self.iteration)
         # print('*** age_loss: ', age_loss)
@@ -126,7 +126,7 @@ class Generator_Model(nn.Module):
         :param target_age_grouup: a list of target age groups, shape=[batch_size,num_age_group]
         :return a flqoat loss for the batch
         """
-        fake_age_logits = self.classify_age_alexnet(fake_img)
+        fake_age_logits = self.classify_age_alexnet(fake_img).cuda()
         age_loss = self.softmax_cross_entropy_loss(fake_age_logits, fake_age_labels)
         return age_loss
 
@@ -137,10 +137,15 @@ class Generator_Model(nn.Module):
         :return fake_age, shape=[batch_size]
         """
         # https://pytorch.org/hub/pytorch_vision_alexnet/ for reference
-        # print('in', fake_img.shape)
+        # print('in', fake_img.shape) 
+        torch.set_default_tensor_type('torch.cuda.FloatTensor')
         num_age_group = 5
         alexnet = models.alexnet(pretrained=True)
-        alexnet.classifier[6] = nn.Linear(in_features=4096, out_features=num_age_group)
+        if torch.cuda.is_available():
+            fake_img = fake_img.to('cuda')
+            alexnet.to('cuda')
+
+        alexnet.classifier[6] = nn.Linear(in_features=4096, out_features=num_age_group) 
         alexnet.eval()
         prepare = transforms.Compose([
 
@@ -149,9 +154,9 @@ class Generator_Model(nn.Module):
         img_stack = []
         
         for img in fake_img:
-            sample = prepare(img)
+            sample = prepare(img).cuda()
             img_stack.append(sample)
-        prepared_img = torch.stack(img_stack)
+        prepared_img = torch.stack(img_stack) 
         output = alexnet(prepared_img)
         return output
 
