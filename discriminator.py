@@ -58,12 +58,13 @@ class Discriminator_Model(nn.Module):
         :return: loss, the combined cross entropy loss, scalar
         """
       # TODO: Calculate the loss
-        # d_loss_real = torch.mean(torch.pow((d_real_real - 1.), 2))
-        # d_loss_fake1 = torch.mean(torch.pow(d_fake1_true, 2))
-        # d_loss_fake2 = torch.mean(torch.pow(d_fake2_false, 2))
+
+        # if gpu
         d_loss_real = self.mse(d_real_real, torch.ones(d_real_real.size()).cuda())
         d_loss_fake1 = self.mse(d_fake1_true, torch.zeros(d_real_real.size()).cuda())
         d_loss_fake2 = self.mse(d_fake2_false, torch.zeros(d_real_real.size()).cuda())
+
+        # if cpu
         # d_loss_real = self.mse(d_real_real, torch.ones(d_real_real.size()))
         # d_loss_fake1 = self.mse(d_fake1_true, torch.zeros(d_real_real.size()))
         # d_loss_fake2 = self.mse(d_fake2_false, torch.zeros(d_real_real.size()))

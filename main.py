@@ -130,7 +130,7 @@ def train(generator, discriminator, device):
         g_output = generator(batch, batch_real_labels)
         #fake img, real label
         d_fake1_true = discriminator(g_output,  batch_real_labels)
-        g_loss = generator.loss_function(batch, d_fake1_true, labels[:,0]) 
+        g_loss = generator.loss_function(g_output, batch, d_fake1_true, labels[:,0]) 
         g_loss.backward()
         generator.optimizer.step()
         # print(g_output.data.cpu().numpy())
