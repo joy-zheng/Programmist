@@ -13,7 +13,7 @@ class Discriminator_Model(nn.Module):
         The model for the discriminator network is defined here.
         """
 
-        self.learning_rate = 0.0005
+        self.learning_rate = 0.001
 
         self.leakyrelu = nn.LeakyReLU(0.2)
         self.conv1 = nn.Conv2d(3, 64, kernel_size=4, stride=2, padding=(1,1))
@@ -48,7 +48,7 @@ class Discriminator_Model(nn.Module):
         x = self.conv5(x)
         return x
 
-    def loss_function(self, disc_real_output, disc_fake1_output, disc_fake2_output):
+    def loss_function(self, d_real_real, d_fake1_true, d_fake2_false):
         """
         Outputs the discriminator loss given the discriminator model output on the real and generated images.
 
@@ -58,9 +58,15 @@ class Discriminator_Model(nn.Module):
         :return: loss, the combined cross entropy loss, scalar
         """
       # TODO: Calculate the loss
-        d_loss_real = torch.mean(torch.pow((disc_real_output - 1.), 2))
-        d_loss_fake1 = torch.mean(torch.pow(disc_fake1_output, 2))
-        d_loss_fake2 = torch.mean(torch.pow(disc_fake2_output, 2))
+        # d_loss_real = torch.mean(torch.pow((d_real_real - 1.), 2))
+        # d_loss_fake1 = torch.mean(torch.pow(d_fake1_true, 2))
+        # d_loss_fake2 = torch.mean(torch.pow(d_fake2_false, 2))
+        d_loss_real = self.mse(d_real_real, torch.ones(d_real_real.size()).cuda())
+        d_loss_fake1 = self.mse(d_fake1_true, torch.zeros(d_real_real.size()).cuda())
+        d_loss_fake2 = self.mse(d_fake2_false, torch.zeros(d_real_real.size()).cuda())
+        # d_loss_real = self.mse(d_real_real, torch.ones(d_real_real.size()))
+        # d_loss_fake1 = self.mse(d_fake1_true, torch.zeros(d_real_real.size()))
+        # d_loss_fake2 = self.mse(d_fake2_false, torch.zeros(d_real_real.size()))
         loss = 1./2* (d_loss_real + 1./2*(d_loss_fake1 + d_loss_fake2))
 
         print("Discriminator loss:", loss)

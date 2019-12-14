@@ -25,7 +25,7 @@ class Generator_Model(nn.Module):
         self.iteration = 0
         
         # Initialize hyperparameters
-        self.learning_rate = 0.0005
+        self.learning_rate = 0.001
         self.batch_size = 10
         self.epochs = 15
         self.generator_weight = 80 # TODO tweak it
@@ -56,6 +56,7 @@ class Generator_Model(nn.Module):
         self.res_block4 = models.resnet.BasicBlock(128, 128)
         self.res_block5 = models.resnet.BasicBlock(128, 128)
         self.res_block6 = models.resnet.BasicBlock(128, 128)
+        self.mse = nn.MSELoss()
 
     def block(self,block,repeat_times):
         layers=[]
@@ -119,7 +120,9 @@ class Generator_Model(nn.Module):
         """
         # TODO: Calculate the loss
         # fake_img = self.call(real_img, target_ae_group)
-        generator_loss = (1 / 2 * torch.mean((fake_img - 1).pow(2)))
+        # generator_loss = (1 / 2 * torch.mean((fake_img - 1).pow(2)))
+        generator_loss = self.mse(fake_img, torch.ones(fake_img.size()).cuda())
+        # generator_loss = self.mse(fake_img, torch.ones(fake_img.size()))
         # print('age label shape', fake_age.shape)
         # age_loss = self.calculate_age_loss(fake_img, fake_age) 
         # identity_loss = self.identity_preserving_module(real_img, fake_img)

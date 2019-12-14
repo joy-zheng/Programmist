@@ -100,7 +100,12 @@ def train(generator, discriminator, device):
         # print(torch.cuda.memory_cached(device))
     # for iteration, batch in enumerate(dataset_iterator):
         batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
-
+        # temp = np.moveaxis(batch[0], 0, 2)
+        # temp = temp*255
+        # temp = temp.astype(np.uint8)
+        # print(temp)
+        # cv2.imshow("", temp)
+        # cv2.waitKey(0)
         #view inputs
         # for i  in range(10):
         #     batch_m =  np.moveaxis(np.asarray(batch), 1, 3)
@@ -118,18 +123,18 @@ def train(generator, discriminator, device):
         # batch_real_labels = batch_real_labels.to(device)
         # batch_fake_labels = batch_fake_labels.to(device)
         
+        # training discriminator
         discriminator.optimizer.zero_grad() 
-        # with tf.GradientTape() as g_tape, tf.GradientTape() as d_tape:
         g_output = generator(batch, batch_real_labels)
 
         #fake img, real label
-        d_fake1_logit = discriminator(g_output,  batch_real_labels)
+        d_fake1_true = discriminator(g_output,  batch_real_labels)
         #real img, fake label
-        d_fake2_logit = discriminator(batch, batch_fake_labels)
+        d_fake2_false = discriminator(batch, batch_fake_labels)
         #real img, real label
-        d_real_logit = discriminator(batch, batch_real_labels)
+        d_real_real = discriminator(batch, batch_real_labels)
  
-        d_loss = discriminator.loss_function(d_real_logit, d_fake1_logit, d_fake2_logit)
+        d_loss = discriminator.loss_function(d_real_real, d_fake1_true, d_fake2_false)
         d_loss.backward()
         discriminator.optimizer.step()
         
@@ -138,28 +143,32 @@ def train(generator, discriminator, device):
 
         generator.optimizer.zero_grad()
         g_output = generator(batch, batch_real_labels)
-        g_loss = generator.loss_function(batch, g_output, labels[:,0]) 
+        #fake img, real label
+        d_fake1_true = discriminator(g_output,  batch_real_labels)
+        g_loss = generator.loss_function(batch, d_fake1_true, labels[:,0]) 
         g_loss.backward()
         generator.optimizer.step()
-
-        # if i % 500 == 0:
-        #     #make the axes match the original shape
-        #     batch_fid =  np.moveaxis(np.asarray(batch.cpu().detach()), 1, 3) #swap axes
-        #     gen_fid =  np.moveaxis(np.asarray(g_output.cpu().detach()), 1, 3) #swap axes
-        #     current_fid = calculate_fid(batch_fid, gen_fid, use_multiprocessing = False, batch_size = args.batch_size)
-        #     total_fid += current_fid 
-        #     print('**** INCEPTION DISTANCE: %g ****' % current_fid) 
-        # if i % 10 == 0: 
-        #     imgs =  np.moveaxis(np.asarray(g_output.cpu().detach()), 1, 3)[0:5]
-        #     for k in range (5):  
-        #         outdir =  os.getcwd() + args.out_dir
-        #         if not os.path.exists(outdir):
-        #                 os.mkdir(outdir)
-        #         img = imgs[k] 
-        #         # img = ((img / 2) + 0.5) * 255
-        #         img = img*255
-        #         img = img.astype(np.uint8)
-        #         imwrite(outdir + '/res_%d.jpg' %(i+k), img.astype(np.uint8) ) 
+        # print(g_output.data.cpu().numpy())
+        if i % 500 == 0:
+            #make the axes match the original shape
+            batch_fid =  np.moveaxis(np.asarray(batch.cpu().detach()), 1, 3) #swap axes
+            gen_fid =  np.moveaxis(np.asarray(g_output.cpu().detach()), 1, 3) #swap axes
+            current_fid = calculate_fid(batch_fid, gen_fid, use_multiprocessing = False, batch_size = args.batch_size)
+            total_fid += current_fid 
+            print('**** INCEPTION DISTANCE: %g ****' % current_fid) 
+        if i % 4 == 0: 
+            imgs =  np.moveaxis(np.asarray(g_output.cpu().detach()), 1, 3)[0:5]
+            for k in range (5):  
+                outdir =  os.getcwd() + args.out_dir
+                if not os.path.exists(outdir):
+                        os.mkdir(outdir)
+                img = imgs[k] 
+                
+                img = (img+1)*127.5
+                # img = img*255
+                img = img.astype(np.uint8)
+                # print(img)
+                imwrite(outdir + '/res_%d.jpg' %(i+k), img.astype(np.uint8) ) 
                 # g_gradients = g_tape.gradient(g_loss,  generator.trainable_variables)
         # generator.optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))        
         # d_gradients = d_tape.gradient(d_loss,  discriminator.trainable_variables)
@@ -229,9 +238,11 @@ def main():
     generator = generator.to(device)
     discriminator = discriminator.to(device)
     #Now send input to device and so on.
-    
-    avg_fid, g_losses, d_losses = train(generator, discriminator, device)
-    print('========================== Average FID: %d  ==========================' % avg_fid)
+    if args.mode == 'train':
+        for epoch in range(args.num_epochs):
+            print('========================== EPOCH %d  ==========================' % (epoch+1))
+            avg_fid, g_losses, d_losses = train(generator, discriminator, device)
+            print('========================== Average FID: %d  ==========================' % avg_fid)
     # try:
     #     # Specify an invalid GPU device
     #     with tf.device('/device:' + args.device):
