@@ -52,7 +52,7 @@ parser.add_argument('--image-size', type=int, default=128,
 parser.add_argument('--num-data-threads', type=int, default=2,
                     help='Number of threads to use when loading & pre-processing training images')
 
-parser.add_argument('--num-epochs', type=int, default=10,
+parser.add_argument('--num-epochs', type=int, default=8,
                     help='Number of passes through the training data to make before stopping')
 
 parser.add_argument('--learn-rate', type=float, default=0.0002,
@@ -106,22 +106,10 @@ def train(generator, discriminator, device):
         # print(temp)
         # cv2.imshow("", temp)
         # cv2.waitKey(0)
-        #view inputs
-        # for i  in range(10):
-        #     batch_m =  np.moveaxis(np.asarray(batch), 1, 3)
-        #     cwd = os.getcwd() 
-        #     print("saving")
-        #     outdir = cwd + '/' + "inputs"
-        #     if not os.path.exists(outdir):
-        #             os.mkdir(outdir)
-        #     imwrite(outdir + '/res0_%d.jpg' %i,  batch_m[i]) 
 
         batch = torch.tensor(batch, device =device).float()
         batch_real_labels = torch.tensor(batch_real_labels, device =device).float()
         batch_fake_labels = torch.tensor(batch_fake_labels, device =device).float()
-        # batch = batch.to(device)
-        # batch_real_labels = batch_real_labels.to(device)
-        # batch_fake_labels = batch_fake_labels.to(device)
         
         # training discriminator
         discriminator.optimizer.zero_grad() 
@@ -137,10 +125,7 @@ def train(generator, discriminator, device):
         d_loss = discriminator.loss_function(d_real_real, d_fake1_true, d_fake2_false)
         d_loss.backward()
         discriminator.optimizer.step()
-        
-        # g_losses.append(g_loss)
-        # d_losses.append(d_loss)
-
+    
         generator.optimizer.zero_grad()
         g_output = generator(batch, batch_real_labels)
         #fake img, real label
@@ -163,27 +148,12 @@ def train(generator, discriminator, device):
                 if not os.path.exists(outdir):
                         os.mkdir(outdir)
                 img = imgs[k] 
-                
                 img = (img+1)*127.5
-                # img = img*255
                 img = img.astype(np.uint8)
-                # print(img)
                 imwrite(outdir + '/res_%d.jpg' %(i+k), img.astype(np.uint8) ) 
-                # g_gradients = g_tape.gradient(g_loss,  generator.trainable_variables)
-        # generator.optimizer.apply_gradients(zip(g_gradients, generator.trainable_variables))        
-        # d_gradients = d_tape.gradient(d_loss,  discriminator.trainable_variables)
-        # discriminator.optimizer.apply_gradients(zip(d_gradients, discriminator.trainable_variables))
     avg_fid = total_fid/i
     return avg_fid, g_losses, d_losses
 
-# def fid_function(real_images, generated_images, dims=2048, cuda = gpu_available):
-#     block_idx = InceptionV3.BLOCK_INDEX_BY_DIM[dims]
-#     model = InceptionV3([block_idx])
-#     if cuda:
-#         model.cuda() 
-#     mr, sr = calculate_activation_statistics(real_images, model, 16, dims, cuda)
-#     mf, sf = calculate_activation_statistics(generated_images, model, 16, dims, cuda)
-#     return calculate_frechet_distance(mr, sr, mf, sf)
 
 # Test the model by generating some samples.
 def test(generator, discriminator):
@@ -201,28 +171,25 @@ def test(generator, discriminator):
 
     batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
     # comment out to  look at  inputs
-
-    batch = torch.tensor(batch).float()
-    batch_real_labels = torch.tensor(batch_real_labels).float()
-    batch_fake_labels = torch.tensor(batch_fake_labels).float()
+    batch = torch.tensor(batch, device =device).float()
+    batch_real_labels = torch.tensor(batch_real_labels, device =device).float()
+    batch_fake_labels = torch.tensor(batch_fake_labels, device =device).float()
 
     img = generator(batch, batch_real_labels)
-    img =  np.moveaxis(np.asarray(img.detach()), 1, 3)
+
 
     ### Below, we've already provided code to save these generated images to files on disk
     # Rescale the image from (-1, 1) to (0, 255)
  
-    if i % 10 == 0: 
-        imgs =  np.moveaxis(np.asarray(g_output.detach()), 1, 3)[0:5]
-        for k in range (5):  
-            img_i = img[k]
-            cwd = os.getcwd() 
-            outdir = cwd + args.out_dir
-            if not os.path.exists(outdir):
-                    os.mkdir(outdir)
-            img = ((img / 2) + 0.5) * 255
-            img = img.astype(np.uint8) 
-            imwrite(outdir + '/res0_%d.jpg' %(i+k), img) 
+    imgs =  np.moveaxis(np.asarray(g_output.cpu().detach()), 1, 3)
+    for k in range(imgs.shape[0]):  
+        outdir =  os.getcwd() + args.out_dir
+        if not os.path.exists(outdir):
+                os.mkdir(outdir)
+        img = imgs[k] 
+        img = (img+1)*127.5
+        img = img.astype(np.uint8)
+        imwrite(outdir + '/res_%d.jpg' %(k), img.astype(np.uint8) ) 
     return None
 ## --------------------------------------------------------------------------------------
 
@@ -243,6 +210,9 @@ def main():
             print('========================== EPOCH %d  ==========================' % (epoch+1))
             avg_fid, g_losses, d_losses = train(generator, discriminator, device)
             print('========================== Average FID: %d  ==========================' % avg_fid)
+        torch.save(generator.state_dict(), './')
+    if args.mode == 'test':
+        test(generator, discriminator)
     # try:
     #     # Specify an invalid GPU device
     #     with tf.device('/device:' + args.device):
@@ -254,8 +224,7 @@ def main():
     #                 # Save at the end of the epoch, too
     #                 print("**** SAVING CHECKPOINT AT END OF EPOCH ****")
     #                 manager.save()
-    if args.mode == 'test':
-        test(generator, discriminator)
+        
     # except RuntimeError as e:
     #     print(e)
 
