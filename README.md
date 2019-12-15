@@ -7,11 +7,14 @@ Face-aging is a new and exciting field in Deep Learning. With the rising popular
  
 ## How to Train (Cross-Age Celebrity Dataset)
 1. Run `python download_data.py` to download the the [Cross-Age Celebrity Dataset metadata](http://www.umiacs.umd.edu/~sirius/CACD/celebrity2000_meta.mat)(817K) and [Face images](https://drive.google.com/file/d/0B3zF40otoXI3OTR0Y0MtNnVhNFU/)(3.5G). These will be downloaded and unzipped in the `data\` directory. 
+2. To train the model from scratch, run `python3 main.py`
+2. To test the model and get results from a saved model, run `python3 main.py mode=='test'`
 
 ## Environment
+We have used Google's Deep Learning platform with Pytorch framework to train with GPU.
+To run locally, follow the directions in setup conda section.
 
 #### Navigating GCP
-
 ```
 python
 from zipfile import ZipFile
