@@ -37,25 +37,19 @@ class Data_Processor:
         for i in range(len(paths)):
             img = cv2.imread(os.path.join(self.image_dir, paths[i]))
             if len(np.asarray(img).shape) > 0 :  
-                img = cv2.resize(img, (self.image_size, self.image_size))
-
-                # img = img.astype(np.float32) 
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                # img = (img - img.mean())/img.std()
-                # img = img/255.0
-                # print("Initial", img)
-
-                # img =  np.moveaxis(img, -1, 0) #swap axes 
+                img = cv2.resize(img, (self.image_size, self.image_size)) 
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) 
                 
                 imgs[i] = img  
         imgs = (imgs/127.5)-1
         imgs = np.swapaxes(imgs, 1, 3)
-        
-        # imgs = np.swapaxes(imgs, 1, 2)
-    
+         
 
         real_labels = np.asarray(ages_path[n:n+self.batch_size,1], dtype = int) 
-        train_label_pairs = self.get_fakelabels(real_labels)
+ 
+        train_label_pairs = self.get_fakelabels(real_labels)   #Generate [real_label, fake_label] pairs
+        # train_label_pairs = self.get_targetfakelabels(real_labels) #Generate [target_label, fake_label] pairs
+        
         fake_labels =  train_label_pairs[:,1]
         real_labels_onehot = np.zeros((len(paths), 5, self.image_size, self.image_size))
         real_labels_onehot[np.arange(len(paths)), real_labels, :,:] = np.ones((self.image_size,self.image_size)) 
@@ -76,5 +70,21 @@ class Data_Processor:
             true_label = true_labels[i]
             fake_label = (true_label+rand)%n
             label_pairs[i,1] = fake_label 
+        return label_pairs
+
+    def get_targetfakelabels(self, true_labels):
+        label_pairs = np.zeros((len(true_labels),2), dtype=int) 
+        n = max(true_labels)
+        for i in range(len(true_labels)):
+            rand = randint(1,n)
+            true_label = true_labels[i]
+            target_label = (true_label+rand)%n
+            label_pairs[i,0] = target_label
+        target_labels = label_pairs[:,0] 
+        for i in range(len(true_labels)):
+            rand = randint(1,n)
+            true_label = target_labels[i]
+            fake_label = (true_label+rand)%n
+            label_pairs[i,1] = fake_label
         return label_pairs
     
