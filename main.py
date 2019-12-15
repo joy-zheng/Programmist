@@ -162,9 +162,12 @@ def test(generator, device, source_img = "15_Daniel_Radcliffe_0003.jpg", target_
 
     :param generator: generator model, device (cuda or cpu), source image and target age
 
-    :return: output image
+    :return: None
     """ 
     #checkpoints = "checkpoints/IPCGANS/2019-01-14_08-34-45/gepoch_6_iter_500.pth" #find your favorite checkpoint and load it 
+    print('========================== Testing ==========================')
+    test_imgs = ["17_Daniel_Radcliffe_0007.jpg", "16_Emma_Watson_0009.jpg", "18_Chris_Brown_0014.jpg", "19_Robert_Pattinson_0008.jpg", "20_Dev_Patel_0004.jpg", "20_Josh_Peck_0006.jpg", "61_Robin_Williams_0013.jpg", "62_Mark_Hamill_0012.jpg", "61_Didi_Conn_0001.jpg"]
+    target_ages = [4,4,4,4,4,4, 0, 0, 0]
 
     checkpoint_dir = "checkpoints/" #find your favorite checkpoint and load it
     paths = np.asarray(sorted(os.listdir(checkpoint_dir)))
@@ -174,30 +177,35 @@ def test(generator, device, source_img = "15_Daniel_Radcliffe_0003.jpg", target_
 
     #load the dictionary
     state_dict = torch.load(generator_state)
-    load_generator_state_dict(generator, state_dict)
-    source_img, target_labels = prep_test_im(source_img, target_label)
+    generator = load_generator_state_dict(generator, state_dict)
 
-    #convert to tensors
-    target_labels = torch.tensor(target_labels, device =device).float()
-    source_img = torch.tensor(source_img, device =device).float()
+    for i in range (len(test_imgs)):
+        source_imgg = test_imgs[i]
+        target_label = target_ages[i]
+        source_img, target_labels = prep_test_im(source_imgg, target_label) 
+        #convert to tensors
+        target_labels = torch.tensor(target_labels, device =device).float()
+        source_img = torch.tensor(source_img, device =device).float()
 
-    generator.eval()
-    with torch.no_grad():
-        generate_image= generator(source_img, target_labels)
+        generator.eval()
+        with torch.no_grad():
+            generate_image= generator(source_img, target_labels)
 
-    #prep output image    
-    img =  np.moveaxis(np.asarray(generate_image.cpu().detach()), 1, 3)[0]
-    print(img)
-    img = (img+1)*127.5
-    img = img.astype(np.uint8)
-    img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE) 
+        image_dir  = 'data/CACD2000'  
+        realimg = cv2.imread(os.path.join(image_dir, source_imgg))
+        realimg = cv2.cvtColor(realimg, cv2.COLOR_BGR2RGB) 
 
-    # outdir =  os.getcwd() + args.out_dir
-    # if not os.path.exists(outdir):
-    #     os.mkdir(outdir) 
-    # imwrite(outdir + '/test_result.jpg', img.astype(np.uint8) ) 
-    imwrite('test_result.jpg', img.astype(np.uint8) ) 
-    return img
+        #prep output image    
+        img =  np.moveaxis(np.asarray(generate_image.cpu().detach()), 1, 3)[0]
+        img = (img+1)*127.5
+        img = img.astype(np.uint8)
+        img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)  
+        outdir =  os.getcwd() + "/test_results"
+        if not os.path.exists(outdir):
+            os.mkdir(outdir) 
+        imwrite(outdir + '/test_result_%d.jpg' %i, img.astype(np.uint8))  
+        imwrite(outdir + '/test_original_%d.jpg' %i, realimg.astype(np.uint8))  
+    return None
 
 def prep_test_im(img_path, target_label):
     image_dir  = 'data/CACD2000'  
@@ -233,7 +241,8 @@ def load_generator_state_dict(generator,state_dict):
     # step4: update model_dict using pretrained_dict
     model_dict.update(pretrained_dict)
     # step5: update model using model_dict
-    generator.load_state_dict(model_dict)   
+    generator.load_state_dict(model_dict) 
+    return generator  
 
 
 ## --------------------------------------------------------------------------------------
