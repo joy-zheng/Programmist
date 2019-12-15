@@ -11,7 +11,7 @@ Face-aging is a new and exciting field in Deep Learning. With the rising popular
 2. To test the model and get results from a saved model, run `python3 main.py mode=='test'`
 
 ## Environment
-We have used Google's Deep Learning platform with Pytorch framework to train with GPU.
+We have used Google's Deep Learning VM with Pytorch framework to train with GPU.
 To run locally, follow the directions in setup conda section.
 
 #### Navigating GCP
