@@ -47,8 +47,8 @@ class Data_Processor:
 
         real_labels = np.asarray(ages_path[n:n+self.batch_size,1], dtype = int) 
  
-        train_label_pairs = self.get_fakelabels(real_labels)   #Generate [real_label, fake_label] pairs
-        # train_label_pairs = self.get_targetfakelabels(real_labels) #Generate [target_label, fake_label] pairs
+        # train_label_pairs = self.get_fakelabels(real_labels)   #Generate [real_label, fake_label] pairs
+        train_label_pairs = self.get_targetfakelabels(real_labels) #Generate [target_label, fake_label] pairs
         
         fake_labels =  train_label_pairs[:,1]
         real_labels_onehot = np.zeros((len(paths), 5, self.image_size, self.image_size))
@@ -78,13 +78,13 @@ class Data_Processor:
         for i in range(len(true_labels)):
             rand = randint(1,n)
             true_label = true_labels[i]
-            target_label = (true_label+rand)%n
+            target_label = (true_label+rand)%(n+1)
             label_pairs[i,0] = target_label
         target_labels = label_pairs[:,0] 
         for i in range(len(true_labels)):
             rand = randint(1,n)
             true_label = target_labels[i]
-            fake_label = (true_label+rand)%n
+            fake_label = (true_label+rand)%(n+1)
             label_pairs[i,1] = fake_label
         return label_pairs
     
