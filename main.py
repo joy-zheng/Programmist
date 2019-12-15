@@ -95,7 +95,7 @@ def train(generator, discriminator, device):
     data_processor = Data_Processor(batch_size = args.batch_size, image_size = args.image_size, mode='train')
     target_agegroup = None
     total_fid = 0
-    train_size = int(args.n_images*0.9)
+    train_size = int(args.n_images*0.2)
     for i in range (int(train_size/args.batch_size)):
         # print(torch.cuda.memory_cached(device))
     # for iteration, batch in enumerate(dataset_iterator):
@@ -141,7 +141,7 @@ def train(generator, discriminator, device):
             current_fid = calculate_fid(batch_fid, gen_fid, use_multiprocessing = False, batch_size = args.batch_size)
             total_fid += current_fid 
             print('**** INCEPTION DISTANCE: %g ****' % current_fid) 
-        if i % 4 == 0: 
+        if i % 25 == 0: 
             imgs =  np.moveaxis(np.asarray(g_output.cpu().detach()), 1, 3)[0:5]
             for k in range (5):  
                 outdir =  os.getcwd() + args.out_dir

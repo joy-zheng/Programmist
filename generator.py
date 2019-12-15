@@ -113,11 +113,11 @@ class Generator_Model(nn.Module):
         # print('**** At iteration ', self.iteration)
         # print('*** age_loss: ', age_loss)
         # print('*** identity_loss: ', identity_loss)
-        print('*** pure_generator_loss: ', generator_loss)
+        # print('*** pure_generator_loss: ', generator_loss)
         weighted_loss = self.generator_weight * generator_loss + self.age_weight * age_loss + self.identity_weight * identity_loss
-        # print("Generator loss:", weighted_loss)
+        print("Generator loss:", weighted_loss)
         self.iteration += 1
-        return generator_loss
+        return weighted_loss
     
     def calculate_age_loss(self, fake_img, fake_age_labels):
         """
@@ -225,3 +225,4 @@ class Generator_Model(nn.Module):
         output = alexnet_model.features(prepared_img)
         # print('*** identity alexnet output features:', output.shape)
         return output
+
