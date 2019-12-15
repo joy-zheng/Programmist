@@ -10,11 +10,7 @@ import torch
 from eval.fid import *
 from eval.inception import InceptionV3
 import cv2
-
-# batch_size = 30
-# image_size = 128
-# z_dim = 500
-# n_images = 163446
+from datetime import datetime
 
 # Killing optional CPU driver warnings
 # os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -30,6 +26,10 @@ parser.add_argument('--img-dir', type=str, default='./data/celebA',
 
 parser.add_argument('--out-dir', type=str, default='/results',
                     help='Data where sampled output images will be written')
+
+parser.add_argument('--saved_model_folder', type=str,
+                    help='the path of folder which stores the parameters file',
+                    default='/checkpoints')
 
 parser.add_argument('--mode', type=str, default='train',
                     help='Can be "train" or "test"')
@@ -77,7 +77,7 @@ args = parser.parse_args()
 
 
 # Train the model for one epoch.
-def train(generator, discriminator, device):
+def train(generator, discriminator, device, epoch):
     """
     Train the model for one epoch. Save a checkpoint every 500 or so batches.
 
@@ -92,13 +92,11 @@ def train(generator, discriminator, device):
     print(device)
     d_losses  = []
     g_losses  = [] 
-    data_processor = Data_Processor(batch_size = args.batch_size, image_size = args.image_size, mode='train')
-    target_agegroup = None
+    data_processor = Data_Processor(batch_size = args.batch_size, image_size = args.image_size, mode='train') 
     total_fid = 0
     train_size = int(args.n_images*0.2)
     for i in range (int(train_size/args.batch_size)):
-        # print(torch.cuda.memory_cached(device))
-    # for iteration, batch in enumerate(dataset_iterator):
+        # print(torch.cuda.memory_cached(device)) 
         batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
         # temp = np.moveaxis(batch[0], 0, 2)
         # temp = temp*255
@@ -132,8 +130,7 @@ def train(generator, discriminator, device):
         d_fake1_true = discriminator(g_output,  batch_real_labels)
         g_loss = generator.loss_function(g_output, batch, d_fake1_true, labels[:,0]) 
         g_loss.backward()
-        generator.optimizer.step()
-        # print(g_output.data.cpu().numpy())
+        generator.optimizer.step() 
         if i % 500 == 0:
             #make the axes match the original shape
             batch_fid =  np.moveaxis(np.asarray(batch.cpu().detach()), 1, 3) #swap axes
@@ -141,6 +138,8 @@ def train(generator, discriminator, device):
             current_fid = calculate_fid(batch_fid, gen_fid, use_multiprocessing = False, batch_size = args.batch_size)
             total_fid += current_fid 
             print('**** INCEPTION DISTANCE: %g ****' % current_fid) 
+            # save_model(generator, discriminator, dir=args.saved_model_folder, filename='epoch_%d_iter_%d.pth'%(epoch, i))
+            # print('checkpoint has been created!')
         if i % 25 == 0: 
             imgs =  np.moveaxis(np.asarray(g_output.cpu().detach()), 1, 3)[0:5]
             for k in range (5):  
@@ -150,51 +149,96 @@ def train(generator, discriminator, device):
                 img = imgs[k] 
                 img = (img+1)*127.5
                 img = img.astype(np.uint8)
-                imwrite(outdir + '/res_%d.jpg' %(i+k), img.astype(np.uint8) ) 
+                img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+                imwrite(outdir + '/res_%d.jpg' %((epoch*i)+k), img.astype(np.uint8) ) 
     avg_fid = total_fid/i
     return avg_fid, g_losses, d_losses
 
 
 # Test the model by generating some samples.
-def test(generator, discriminator):
+def test(generator, device, source_img = "15_Daniel_Radcliffe_0003.jpg", target_label = 4):
     """
-    Test the model.
+    Test the model by loading the newest checkpoint and generate sample images
 
-    :param generator: generator model
+    :param generator: generator model, device (cuda or cpu), source image and target age
 
-    :return: None
-    """
-    # TODO: Replace 'None' with code to sample a batch of random images
-    data_processor = Data_Processor(batch_size = args.batch_size, image_size = args.image_size, mode='test')
-    # test_size = int(n_images*0.1)
-    # for i in range (int(test_size/batch_size)):
+    :return: output image
+    """ 
+    #checkpoints = "checkpoints/IPCGANS/2019-01-14_08-34-45/gepoch_6_iter_500.pth" #find your favorite checkpoint and load it 
 
-    batch, batch_real_labels, batch_fake_labels, labels = data_processor.get_next_batch_image()[0:4] #Fancy way of getting a new batch of imgs and labels
-    # comment out to  look at  inputs
-    batch = torch.tensor(batch, device =device).float()
-    batch_real_labels = torch.tensor(batch_real_labels, device =device).float()
-    batch_fake_labels = torch.tensor(batch_fake_labels, device =device).float()
+    checkpoint_dir = "checkpoints/" #find your favorite checkpoint and load it
+    paths = np.asarray(sorted(os.listdir(checkpoint_dir)))
+    date_dir = checkpoint_dir+ paths[-1]  
+    paths = np.asarray(sorted(os.listdir(date_dir)))
+    generator_state = date_dir + '/' + paths[-1] #get the newest state in the last directory 
 
-    img = generator(batch, batch_real_labels)
+    #load the dictionary
+    state_dict = torch.load(generator_state)
+    load_generator_state_dict(generator, state_dict)
+    source_img, target_labels = prep_test_im(source_img, target_label)
+
+    #convert to tensors
+    target_labels = torch.tensor(target_labels, device =device).float()
+    source_img = torch.tensor(source_img, device =device).float()
+
+    generator.eval()
+    with torch.no_grad():
+        generate_image= generator(source_img, target_labels)
+
+    #prep output image    
+    img =  np.moveaxis(np.asarray(generate_image.cpu().detach()), 1, 3)[0]
+    print(img)
+    img = (img+1)*127.5
+    img = img.astype(np.uint8)
+    img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE) 
+
+    # outdir =  os.getcwd() + args.out_dir
+    # if not os.path.exists(outdir):
+    #     os.mkdir(outdir) 
+    # imwrite(outdir + '/test_result.jpg', img.astype(np.uint8) ) 
+    imwrite('test_result.jpg', img.astype(np.uint8) ) 
+    return img
+
+def prep_test_im(img_path, target_label):
+    image_dir  = 'data/CACD2000'  
+    img = cv2.imread(os.path.join(image_dir, img_path))
+    if len(np.asarray(img).shape) > 0 :  
+        img = cv2.resize(img, (args.image_size, args.image_size)) 
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) 
+    img = (img/127.5)-1
+    imgs = [img, img]
+    imgs = np.swapaxes(imgs, 1, 3)
+    n = len(imgs)
+    real_labels_onehot = np.zeros((n, 5, args.image_size, args.image_size))
+    real_labels_onehot[np.arange(n), target_label, :,:] = np.ones((args.image_size,args.image_size)) 
+    return imgs, real_labels_onehot
+
+def save_model(generator, discriminator,dir,filename):
+    outdir =  os.getcwd() + dir
+    if not os.path.exists(outdir):
+            os.mkdir(outdir)
+    TIMESTAMP = "/{0:%Y-%m-%d_%H-%M-%S}".format(datetime.now())
+    outdir = outdir + TIMESTAMP 
+    if not os.path.exists(outdir):
+            os.mkdir(outdir)
+    torch.save(generator.state_dict(),os.path.join(outdir,"g"+filename))
+    torch.save(discriminator.state_dict(),os.path.join(outdir,"d"+filename)) 
+
+def load_generator_state_dict(generator,state_dict):
+    pretrained_dict = state_dict
+    # step2: get model state_dict
+    model_dict = generator.state_dict()
+    # step3: remove pretrained_dict params which is not in model_dict
+    pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+    # step4: update model_dict using pretrained_dict
+    model_dict.update(pretrained_dict)
+    # step5: update model using model_dict
+    generator.load_state_dict(model_dict)   
 
 
-    ### Below, we've already provided code to save these generated images to files on disk
-    # Rescale the image from (-1, 1) to (0, 255)
- 
-    imgs =  np.moveaxis(np.asarray(g_output.cpu().detach()), 1, 3)
-    for k in range(imgs.shape[0]):  
-        outdir =  os.getcwd() + args.out_dir
-        if not os.path.exists(outdir):
-                os.mkdir(outdir)
-        img = imgs[k] 
-        img = (img+1)*127.5
-        img = img.astype(np.uint8)
-        imwrite(outdir + '/res_%d.jpg' %(k), img.astype(np.uint8) ) 
-    return None
 ## --------------------------------------------------------------------------------------
 
-def main():
-    # Load a batch of images (to feed to the discriminator)
+def main(): 
     # Initialize generator and discriminator models
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     generator = Generator_Model()
@@ -208,22 +252,13 @@ def main():
     if args.mode == 'train':
         for epoch in range(args.num_epochs):
             print('========================== EPOCH %d  ==========================' % (epoch+1))
-            avg_fid, g_losses, d_losses = train(generator, discriminator, device)
-            print('========================== Average FID: %d  ==========================' % avg_fid)
-        torch.save(generator.state_dict(), './')
+            avg_fid, g_losses, d_losses = train(generator, discriminator, device, epoch)
+            print('========================== Average FID: %d  ==========================' % avg_fid)  
+            save_model(generator, discriminator, dir=args.saved_model_folder, filename='epoch_%d.pth'%(epoch))
+            print('checkpoint has been created!')
     if args.mode == 'test':
-        test(generator, discriminator)
-    # try:
-    #     # Specify an invalid GPU device
-    #     with tf.device('/device:' + args.device):
-    #         if args.mode == 'train':
-    #             for epoch in range(0, args.num_epochs):
-    #                 print('========================== EPOCH %d  ==========================' % epoch)
-    #                 avg_fid = train(generator, discriminator, dataset_iterator, manager)
-    #                 print("Average FID for Epoch: " + str(avg_fid))
-    #                 # Save at the end of the epoch, too
-    #                 print("**** SAVING CHECKPOINT AT END OF EPOCH ****")
-    #                 manager.save()
+        test(generator, device) 
+    test(generator, device) 
         
     # except RuntimeError as e:
     #     print(e)
